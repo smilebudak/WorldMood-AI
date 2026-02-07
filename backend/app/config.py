@@ -21,10 +21,9 @@ class Settings(BaseSettings):
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     CACHE_TTL_SECONDS: int = 600  # 10 minutes
 
-    # --- Music data provider (Spotify by default, swap to TIDAL later) ---
-    MUSIC_PROVIDER: str = os.getenv("MUSIC_PROVIDER", "spotify")
-    SPOTIFY_CLIENT_ID: str = os.getenv("SPOTIFY_CLIENT_ID", "")
-    SPOTIFY_CLIENT_SECRET: str = os.getenv("SPOTIFY_CLIENT_SECRET", "")
+    # --- Music data provider ---
+    MUSIC_PROVIDER: str = os.getenv("MUSIC_PROVIDER", "lastfm")
+    LASTFM_API_KEY: str = os.getenv("LASTFM_API_KEY", "")
 
     # --- News / sentiment ---
     NEWS_API_KEY: str = os.getenv("NEWS_API_KEY", "")

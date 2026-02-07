@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from app.config import get_settings
 from app.db.session import async_session_factory, engine
 from app.db.models import Base
-from app.services.spotify_service import SpotifyService
+from app.services.lastfm_service import LastFmService, SUPPORTED_COUNTRIES
 from app.services.news_service import NewsService
 from app.services.trends_service import TrendsService
 from app.core.mood_engine import compute_mood
@@ -49,10 +49,10 @@ async def run() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    spotify = SpotifyService()
+    lastfm = LastFmService()
     news = NewsService()
 
-    market_features = await spotify.fetch_all_markets()
+    market_features = await lastfm.fetch_all_markets()
     logger.info("Fetched features for %d markets", len(market_features))
 
     async with async_session_factory() as db:

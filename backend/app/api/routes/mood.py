@@ -7,17 +7,14 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends
-import redis.asyncio as aioredis
 
 from app.api.deps import get_redis, get_db
 from app.config import get_settings
 from app.models.schemas import GlobalMoodResponse, CountryMoodResponse
 from app.services.trends_service import TrendsService
-from app.services.spotify_service import SpotifyService
+from app.services.lastfm_service import LastFmService
 from app.services.news_service import NewsService
 from app.core.mood_engine import compute_mood
-
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/mood", tags=["mood"])
@@ -28,29 +25,37 @@ CACHE_KEY = "mood:global:latest"
 
 @router.get("/global", response_model=GlobalMoodResponse)
 async def get_global_mood(
-    cache: aioredis.Redis = Depends(get_redis),
-    db: AsyncSession = Depends(get_db),
+    cache=Depends(get_redis),
+    db=Depends(get_db),
 ):
     # 1. Try cache
-    cached = await cache.get(CACHE_KEY)
-    if cached:
-        return GlobalMoodResponse(**json.loads(cached))
+    if cache:
+        try:
+            cached = await cache.get(CACHE_KEY)
+            if cached:
+                return GlobalMoodResponse(**json.loads(cached))
+        except Exception:
+            pass
 
     # 2. Try DB
-    svc = TrendsService(db)
-    rows = await svc.get_latest_global()
+    if db:
+        try:
+            svc = TrendsService(db)
+            rows = await svc.get_latest_global()
+            if rows:
+                countries = [CountryMoodResponse.model_validate(r) for r in rows]
+                resp = GlobalMoodResponse(updated_at=dt.datetime.utcnow(), countries=countries)
+                if cache:
+                    await cache.setex(CACHE_KEY, settings.CACHE_TTL_SECONDS, resp.model_dump_json())
+                return resp
+        except Exception:
+            pass
 
-    if rows:
-        countries = [CountryMoodResponse.model_validate(r) for r in rows]
-        resp = GlobalMoodResponse(updated_at=dt.datetime.utcnow(), countries=countries)
-        await cache.setex(CACHE_KEY, settings.CACHE_TTL_SECONDS, resp.model_dump_json())
-        return resp
-
-    # 3. Compute on-the-fly (demo / first run)
-    spotify = SpotifyService()
+    # 3. Compute on-the-fly from Last.fm
+    lastfm = LastFmService()
     news = NewsService()
 
-    market_features = await spotify.fetch_all_markets()
+    market_features = await lastfm.fetch_all_markets()
     countries: list[CountryMoodResponse] = []
 
     COUNTRY_NAMES = _country_names()
@@ -83,7 +88,13 @@ async def get_global_mood(
         )
 
     resp = GlobalMoodResponse(updated_at=dt.datetime.utcnow(), countries=countries)
-    await cache.setex(CACHE_KEY, settings.CACHE_TTL_SECONDS, resp.model_dump_json())
+
+    if cache:
+        try:
+            await cache.setex(CACHE_KEY, settings.CACHE_TTL_SECONDS, resp.model_dump_json())
+        except Exception:
+            pass
+
     return resp
 
 
