@@ -168,6 +168,19 @@ export default function CountryPanel({ countryCode, onClose }: CountryPanelProps
                 </div>
               )}
 
+              {/* AI Mood Summary */}
+              {data.news_summary && (
+                <div className="rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm">✨</span>
+                    <span className="text-xs font-medium text-purple-400">AI Mood Insight</span>
+                  </div>
+                  <p className="text-sm text-gray-300 italic leading-relaxed">
+                    "{data.news_summary}"
+                  </p>
+                </div>
+              )}
+
               {/* 7-day trend chart */}
               {data.trend.length > 1 && (
                 <div>

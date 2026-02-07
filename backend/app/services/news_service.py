@@ -53,6 +53,7 @@ class NewsService:
 
     def __init__(self):
         self._headline_cache: dict[str, list[str]] = {}
+        self._summary_cache: dict[str, str] = {}
 
     async def fetch_sentiment(self, country_code: str) -> Optional[float]:
         """Return a sentiment score between -1.0 and 1.0 for a country's
@@ -172,10 +173,115 @@ Respond with ONLY a JSON object in this exact format, nothing else:
                 score = float(result.get("score", 0))
                 summary = result.get("summary", "")
                 score = float(np.clip(score, -1.0, 1.0))
+                # Cache the summary for later use
+                self._summary_cache[cc] = summary
                 logger.info("Gemini sentiment for %s: %.2f – %s", cc, score, summary)
                 return round(score, 3)
 
         return None
+
+    async def generate_mood_summary(
+        self, 
+        country_code: str, 
+        country_name: str,
+        mood_label: str,
+        valence: float,
+        energy: float,
+        top_track: Optional[str] = None,
+        top_genre: Optional[str] = None,
+        headlines: Optional[list[str]] = None
+    ) -> str:
+        """Generate a one-sentence AI summary combining music and news mood."""
+        cc = country_code.upper()
+        
+        # Return cached if available
+        if cc in self._summary_cache and self._summary_cache[cc]:
+            return self._summary_cache[cc]
+        
+        if not settings.GEMINI_API_KEY:
+            return self._generate_fallback_summary(country_name, mood_label, valence, energy, top_genre)
+        
+        # Build context
+        music_context = f"Music data: valence={valence:.2f} (happiness), energy={energy:.2f}"
+        
+        news_context = ""
+        if headlines and len(headlines) > 0:
+            news_context = "Today's news headlines:\n" + "\n".join(f"- {h}" for h in headlines[:5])
+        
+        prompt = f"""You are a cultural mood analyst for {country_name}. Based on the music listening patterns AND current news, write ONE insightful sentence (max 20 words) about what people in {country_name} are feeling right now.
+
+{music_context}
+Overall mood: {mood_label}
+
+{news_context}
+
+IMPORTANT: Your sentence MUST mention something specific from the news headlines if available. Connect the music mood with current events.
+Example good responses:
+- "Germans feel cautious optimism as economic news improves, reflected in upbeat pop choices."
+- "Tensions from border news create anxious energy, yet Turks find solace in melancholic ballads."
+- "Brazilians celebrate football victory with high-energy dance tracks dominating the charts."
+
+Reply with ONLY your one sentence, nothing else."""
+
+        try:
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.8,
+                    "maxOutputTokens": 60,
+                }
+            }
+            
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{GEMINI_API_URL}?key={settings.GEMINI_API_KEY}",
+                    json=payload,
+                    timeout=10,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                
+                text = (
+                    data.get("candidates", [{}])[0]
+                    .get("content", {})
+                    .get("parts", [{}])[0]
+                    .get("text", "")
+                ).strip()
+                
+                if text:
+                    self._summary_cache[cc] = text
+                    logger.info("Generated mood summary for %s: %s", cc, text)
+                    return text
+                    
+        except Exception as e:
+            logger.warning("Gemini summary failed for %s: %s", cc, e)
+        
+        return self._generate_fallback_summary(country_name, mood_label, valence, energy, top_genre, headlines)
+    
+    @staticmethod
+    def _generate_fallback_summary(
+        country_name: str, 
+        mood_label: str, 
+        valence: float, 
+        energy: float, 
+        top_genre: Optional[str],
+        headlines: Optional[list[str]] = None
+    ) -> str:
+        """Generate a simple fallback summary without AI."""
+        mood_desc = {
+            "Happy": "experiencing optimistic vibes today",
+            "Calm": "in a peaceful and steady state",
+            "Sad": "reflecting on challenging times",
+            "Angry": "feeling tense amid recent events",
+            "Anxious": "navigating uncertain times"
+        }
+        desc = mood_desc.get(mood_label, "experiencing mixed feelings")
+        
+        # Try to add context from headlines
+        if headlines and len(headlines) > 0:
+            return f"{country_name} is {desc} as news unfolds across the nation."
+        
+        return f"{country_name} is {desc}."
 
     @staticmethod
     def _keyword_score(headlines: list[str]) -> float:

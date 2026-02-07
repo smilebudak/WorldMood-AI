@@ -19,6 +19,8 @@ export interface CountryMood {
   top_genre: string | null;
   top_track: string | null;
   news_sentiment: number | null;
+  news_headlines: string[] | null;
+  news_summary: string | null;
   date: string;
 }
 

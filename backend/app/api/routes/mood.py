@@ -69,10 +69,24 @@ async def get_global_mood(
             acousticness=feat.get("acousticness", 0.5),
             news_sentiment=sentiment,
         )
+        
+        # Generate AI mood summary
+        country_name = SUPPORTED_COUNTRIES.get(cc, cc)
+        summary = await news.generate_mood_summary(
+            country_code=cc,
+            country_name=country_name,
+            mood_label=mood.mood_label,
+            valence=feat["valence"],
+            energy=feat["energy"],
+            top_track=feat.get("top_track"),
+            top_genre=feat.get("top_genre"),
+            headlines=headlines[:5] if headlines else None,
+        )
+        
         countries.append(
             CountryMoodResponse(
                 country_code=cc,
-                country_name=SUPPORTED_COUNTRIES.get(cc, cc),
+                country_name=country_name,
                 date=dt.datetime.utcnow(),
                 mood_score=mood.mood_score,
                 mood_label=mood.mood_label,
@@ -85,6 +99,7 @@ async def get_global_mood(
                 top_track=feat.get("top_track"),
                 news_sentiment=sentiment,
                 news_headlines=headlines[:5] if headlines else None,
+                news_summary=summary,
             )
         )
 
@@ -95,6 +110,9 @@ async def get_global_mood(
         try:
             svc = TrendsService(db)
             for country in countries:
+                # Convert headlines list to JSON string for DB storage
+                headlines_json = json.dumps(country.news_headlines) if country.news_headlines else None
+                
                 await svc.upsert_mood({
                     "country_code": country.country_code,
                     "country_name": country.country_name,
@@ -109,6 +127,8 @@ async def get_global_mood(
                     "top_genre": country.top_genre,
                     "top_track": country.top_track,
                     "news_sentiment": country.news_sentiment,
+                    "news_headlines": headlines_json,
+                    "news_summary": country.news_summary if hasattr(country, 'news_summary') else None,
                 })
             logger.info("Saved %d mood records to database", len(countries))
         except Exception as e:

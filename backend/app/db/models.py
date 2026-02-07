@@ -47,6 +47,8 @@ class CountryMood(Base):
     top_genre = Column(String(60), nullable=True)
     top_track = Column(String(200), nullable=True)
     news_sentiment = Column(Float, nullable=True)
+    news_headlines = Column(Text, nullable=True)  # JSON array of headlines
+    news_summary = Column(Text, nullable=True)    # AI-generated summary
 
     created_at = Column(DateTime, server_default=func.now())
 

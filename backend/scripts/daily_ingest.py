@@ -50,6 +50,7 @@ async def run() -> None:
 
         for cc, feat in market_features.items():
             sentiment = await news.fetch_sentiment(cc)
+            headlines = await news.fetch_headlines(cc)
             mood = compute_mood(
                 valence=feat["valence"],
                 energy=feat["energy"],
@@ -57,6 +58,10 @@ async def run() -> None:
                 acousticness=feat.get("acousticness", 0.5),
                 news_sentiment=sentiment,
             )
+
+            # Convert headlines to JSON for storage
+            import json
+            headlines_json = json.dumps(headlines[:5]) if headlines else None
 
             # Persist mood
             await svc.upsert_mood(
@@ -74,6 +79,7 @@ async def run() -> None:
                     "top_genre": feat.get("top_genre"),
                     "top_track": feat.get("top_track"),
                     "news_sentiment": sentiment,
+                    "news_headlines": headlines_json,
                 }
             )
 
