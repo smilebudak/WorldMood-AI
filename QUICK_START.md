@@ -20,7 +20,7 @@ nano .env
 ```env
 DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@localhost:5432/moodatlas
 REDIS_URL=redis://localhost:6379/0
-LASTFM_API_KEY=05c90350a7eec02f8706afb12ccb0fc0
+LASTFM_API_KEY=your_lastfm_api_key_here
 ```
 
 ---
@@ -238,7 +238,7 @@ python3 -m alembic current
 
 **Çözüm:** `.env` dosyasında API key'i kontrol et:
 ```env
-LASTFM_API_KEY=05c90350a7eec02f8706afb12ccb0fc0
+LASTFM_API_KEY=your_lastfm_api_key_here
 ```
 
 ### Port Zaten Kullanımda

@@ -61,6 +61,7 @@ async def get_global_mood(
 
     for cc, feat in market_features.items():
         sentiment = await news.fetch_sentiment(cc)
+        headlines = await news.fetch_headlines(cc)
         mood = compute_mood(
             valence=feat["valence"],
             energy=feat["energy"],
@@ -83,6 +84,7 @@ async def get_global_mood(
                 top_genre=feat.get("top_genre"),
                 top_track=feat.get("top_track"),
                 news_sentiment=sentiment,
+                news_headlines=headlines[:5] if headlines else None,
             )
         )
 

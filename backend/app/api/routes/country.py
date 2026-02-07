@@ -51,11 +51,12 @@ async def get_country_mood(
         except Exception:
             pass
 
-    # Fallback: compute live from Last.fm
+    # Fallback: compute live from Last.fm + Gemini news
     lastfm = LastFmService()
     news = NewsService()
     feat = await lastfm.fetch_country_features(cc)
     sentiment = await news.fetch_sentiment(cc)
+    headlines = await news.fetch_headlines(cc)
     mood = compute_mood(
         valence=feat["valence"],
         energy=feat["energy"],
@@ -77,6 +78,7 @@ async def get_country_mood(
         top_genre=feat.get("top_genre"),
         top_track=feat.get("top_track"),
         news_sentiment=sentiment,
+        news_headlines=headlines[:5] if headlines else None,
         trend=[],
         spike_active=False,
     )

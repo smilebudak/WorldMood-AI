@@ -1,12 +1,16 @@
 """
-NewsService – fetches headline sentiment per country to supplement the
-music-based mood signal.  Uses NewsAPI (newsapi.org) by default.
+NewsService – fetches country headlines from Google News RSS and uses
+Gemini AI to analyze sentiment.  The sentiment score (-1.0 … 1.0) is
+blended into the mood engine alongside music features.
 """
 
 from __future__ import annotations
 
 import logging
+import re
+import asyncio
 from typing import Optional
+from xml.etree import ElementTree
 
 import httpx
 import numpy as np
@@ -16,67 +20,196 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-NEWS_API_URL = "https://newsapi.org/v2/top-headlines"
+# Google News RSS by country (uses geo/edition codes)
+GOOGLE_NEWS_RSS = "https://news.google.com/rss"
 
-# Minimal keyword-based sentiment (replace with a real NLP model in prod)
-POSITIVE_WORDS = frozenset(
-    ["win", "celebrate", "peace", "growth", "success", "record", "breakthrough"]
-)
-NEGATIVE_WORDS = frozenset(
-    ["war", "crisis", "attack", "death", "crash", "protest", "disaster", "flood"]
-)
+# Map ISO-2 country codes → Google News edition codes
+COUNTRY_TO_EDITION: dict[str, str] = {
+    "US": "US:en", "GB": "GB:en", "CA": "CA:en", "AU": "AU:en",
+    "IN": "IN:en", "DE": "DE:de", "FR": "FR:fr", "ES": "ES:es",
+    "IT": "IT:it", "BR": "BR:pt-BR", "MX": "MX:es-419", "AR": "AR:es-419",
+    "CL": "CL:es-419", "CO": "CO:es-419", "JP": "JP:ja", "KR": "KR:ko",
+    "TR": "TR:tr", "PL": "PL:pl", "NL": "NL:nl", "SE": "SE:sv",
+    "NO": "NO:no", "FI": "FI:fi", "RU": "RU:ru", "UA": "UA:uk",
+    "ZA": "ZA:en", "NG": "NG:en", "EG": "EG:ar", "IL": "IL:he",
+    "SA": "SA:ar", "AE": "AE:ar", "PK": "PK:en", "TH": "TH:th",
+    "VN": "VN:vi", "ID": "ID:id", "MY": "MY:en", "SG": "SG:en",
+    "PH": "PH:en", "NZ": "NZ:en", "PT": "PT:pt-PT", "BE": "BE:fr",
+    "AT": "AT:de", "CH": "CH:de", "IE": "IE:en", "DK": "DK:da",
+    "IS": "IS:is", "CZ": "CZ:cs", "HU": "HU:hu", "RO": "RO:ro",
+    "BG": "BG:bg", "GR": "GR:el", "RS": "RS:sr", "HR": "HR:hr",
+    "SI": "SI:sl", "SK": "SK:sk", "EE": "EE:et", "LV": "LV:lv",
+    "LT": "LT:lt", "CN": "CN:zh-Hans", "TW": "TW:zh-Hant",
+    "HK": "HK:zh-Hant", "PE": "PE:es-419", "VE": "VE:es-419",
+    "EC": "EC:es-419", "KE": "KE:en", "MA": "MA:fr",
+}
+
+# Gemini API endpoint
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 
 class NewsService:
+    """Fetch headlines via Google News RSS, analyze sentiment with Gemini."""
+
+    def __init__(self):
+        self._headline_cache: dict[str, list[str]] = {}
+
     async def fetch_sentiment(self, country_code: str) -> Optional[float]:
         """Return a sentiment score between -1.0 and 1.0 for a country's
-        current headlines, or ``None`` if unavailable."""
-        if not settings.NEWS_API_KEY:
-            return self._fallback_sentiment(country_code)
+        current headlines, or a fallback if unavailable."""
+        cc = country_code.upper()
+
+        # 1. Fetch headlines
+        headlines = await self._fetch_headlines(cc)
+        if not headlines:
+            logger.warning("No headlines for %s, using fallback", cc)
+            return self._fallback_sentiment(cc)
+
+        # 2. Analyze with Gemini
+        if settings.GEMINI_API_KEY:
+            try:
+                score = await self._gemini_analyze(cc, headlines)
+                if score is not None:
+                    return score
+            except Exception as e:
+                logger.warning("Gemini analysis failed for %s: %s", cc, e)
+
+        # 3. Fallback to keyword-based if Gemini fails
+        return self._keyword_score(headlines)
+
+    async def fetch_headlines(self, country_code: str) -> list[str]:
+        """Public method to get headlines for a country (used by API)."""
+        return await self._fetch_headlines(country_code.upper())
+
+    async def _fetch_headlines(self, cc: str, limit: int = 15) -> list[str]:
+        """Fetch top headlines from Google News RSS for a country."""
+        if cc in self._headline_cache:
+            return self._headline_cache[cc]
+
+        edition = COUNTRY_TO_EDITION.get(cc)
+        if not edition:
+            # Try generic English
+            edition = f"{cc}:en"
+
+        country_part, lang_part = edition.split(":", 1)
+        url = f"{GOOGLE_NEWS_RSS}?hl={lang_part}&gl={country_part}&ceid={edition}"
 
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(
-                    NEWS_API_URL,
-                    params={
-                        "country": country_code.lower(),
-                        "pageSize": 20,
-                        "apiKey": settings.NEWS_API_KEY,
-                    },
-                    timeout=10,
-                )
+                resp = await client.get(url, timeout=10, follow_redirects=True)
                 resp.raise_for_status()
-                articles = resp.json().get("articles", [])
-                return self._score_articles(articles)
-        except Exception:
-            logger.warning("News fetch failed for %s, using fallback", country_code)
-            return self._fallback_sentiment(country_code)
+
+                root = ElementTree.fromstring(resp.text)
+                items = root.findall(".//item/title")
+                headlines = []
+                for item in items[:limit]:
+                    text = item.text or ""
+                    # Remove source suffix like " - BBC News"
+                    text = re.sub(r"\s*-\s*[^-]+$", "", text).strip()
+                    if text:
+                        headlines.append(text)
+
+                self._headline_cache[cc] = headlines
+                logger.debug("Fetched %d headlines for %s", len(headlines), cc)
+                return headlines
+
+        except Exception as e:
+            logger.warning("Google News RSS failed for %s: %s", cc, e)
+            return []
+
+    async def _gemini_analyze(self, cc: str, headlines: list[str]) -> Optional[float]:
+        """Send headlines to Gemini and get a sentiment score."""
+        headlines_text = "\n".join(f"- {h}" for h in headlines)
+
+        prompt = f"""Analyze the following news headlines from {cc} and determine the overall emotional mood/sentiment of this country right now.
+
+Headlines:
+{headlines_text}
+
+Based on these headlines, rate the overall national mood on a scale from -1.0 to 1.0 where:
+- -1.0 = extremely negative (war, disasters, crises)
+- -0.5 = negative (economic problems, social unrest)
+- 0.0 = neutral
+- 0.5 = positive (celebrations, achievements, growth)
+- 1.0 = extremely positive (major victories, breakthroughs)
+
+Respond with ONLY a JSON object in this exact format, nothing else:
+{{"score": <float between -1.0 and 1.0>, "summary": "<one sentence summary of the mood in English>"}}"""
+
+        payload = {
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": 150,
+            }
+        }
+
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{GEMINI_API_URL}?key={settings.GEMINI_API_KEY}",
+                json=payload,
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+            # Extract text from Gemini response
+            text = (
+                data.get("candidates", [{}])[0]
+                .get("content", {})
+                .get("parts", [{}])[0]
+                .get("text", "")
+            )
+
+            # Parse the JSON from Gemini's response
+            import json
+            # Try to extract JSON from the response
+            json_match = re.search(r'\{[^}]+\}', text)
+            if json_match:
+                result = json.loads(json_match.group())
+                score = float(result.get("score", 0))
+                summary = result.get("summary", "")
+                score = float(np.clip(score, -1.0, 1.0))
+                logger.info("Gemini sentiment for %s: %.2f – %s", cc, score, summary)
+                return round(score, 3)
+
+        return None
 
     @staticmethod
-    def _score_articles(articles: list[dict]) -> float:
-        """Naive keyword sentiment scoring.  Replace with transformer-based
-        model (e.g. HuggingFace pipeline) for production accuracy."""
-        if not articles:
-            return 0.0
+    def _keyword_score(headlines: list[str]) -> float:
+        """Fallback keyword-based sentiment when Gemini is unavailable."""
+        POSITIVE = frozenset([
+            "win", "celebrate", "peace", "growth", "success", "record",
+            "breakthrough", "victory", "improve", "rise", "gain", "boost",
+            "hope", "joy", "festival", "achievement", "award",
+        ])
+        NEGATIVE = frozenset([
+            "war", "crisis", "attack", "death", "crash", "protest",
+            "disaster", "flood", "kill", "bomb", "fire", "earthquake",
+            "recession", "inflation", "poverty", "violence", "terror",
+        ])
 
-        scores: list[float] = []
-        for a in articles:
-            text = f"{a.get('title', '')} {a.get('description', '')}".lower()
-            pos = sum(1 for w in POSITIVE_WORDS if w in text)
-            neg = sum(1 for w in NEGATIVE_WORDS if w in text)
+        scores = []
+        for h in headlines:
+            words = h.lower().split()
+            pos = sum(1 for w in words if any(p in w for p in POSITIVE))
+            neg = sum(1 for w in words if any(n in w for n in NEGATIVE))
             total = pos + neg
             if total == 0:
                 scores.append(0.0)
             else:
                 scores.append((pos - neg) / total)
 
-        return float(np.clip(np.mean(scores), -1.0, 1.0))
+        if not scores:
+            return 0.0
+        return round(float(np.clip(np.mean(scores), -1.0, 1.0)), 3)
 
     @staticmethod
     def _fallback_sentiment(country_code: str) -> float:
-        """Deterministic synthetic sentiment for demo mode."""
+        """Deterministic synthetic sentiment for when no data is available."""
         import hashlib
-
         seed = int(hashlib.md5(f"news-{country_code}".encode()).hexdigest()[:8], 16)
         rng = np.random.default_rng(seed)
         return round(float(rng.uniform(-0.3, 0.5)), 3)

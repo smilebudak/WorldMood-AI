@@ -24,6 +24,8 @@ class MoodBase(BaseModel):
     top_genre: Optional[str] = None
     top_track: Optional[str] = None
     news_sentiment: Optional[float] = None
+    news_headlines: Optional[list[str]] = None
+    news_summary: Optional[str] = None
 
 
 class CountryMoodResponse(MoodBase):

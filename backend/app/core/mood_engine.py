@@ -48,7 +48,7 @@ def compute_mood(
              + 0.20 * energy_component
              + 0.15 * danceability
              - 0.10 * acousticness
-        If news_sentiment is provided it contributes 0.15 weight.
+        If news_sentiment is provided it contributes 0.50 weight (50/50 blend).
     """
 
     # Energy is bimodal: high energy + low valence → anger, otherwise positive
@@ -62,7 +62,7 @@ def compute_mood(
     )
 
     if news_sentiment is not None:
-        base = base * 0.85 + news_sentiment * 0.15
+        base = base * 0.50 + news_sentiment * 0.50
 
     mood_score = float(np.clip(base, -1.0, 1.0))
 
