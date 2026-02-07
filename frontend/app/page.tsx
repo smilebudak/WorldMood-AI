@@ -7,6 +7,7 @@ import CountryTooltip from "./components/CountryTooltip";
 import CountryPanel from "./components/CountryPanel";
 import MoodLegend from "./components/MoodLegend";
 import SpikeAlert from "./components/SpikeAlert";
+import GlobalStats from "./components/GlobalStats";
 import { fetchGlobalMood, type CountryMood } from "./lib/api";
 
 export default function Home() {
@@ -55,19 +56,60 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between
-                   px-6 py-4 pointer-events-none"
+                   px-3 py-2 sm:px-6 sm:py-4 pointer-events-none"
       >
-        <div className="pointer-events-auto">
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            MoodAtlas
-          </h1>
-          <p className="text-xs text-gray-500">Global Mood Map</p>
-        </div>
-        {updatedAt && (
-          <div className="text-xs text-gray-600 pointer-events-auto">
-            Updated {new Date(updatedAt).toLocaleTimeString()}
+        <div className="pointer-events-auto flex items-center gap-2 sm:gap-3">
+          {/* Animated Globe Icon */}
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-mood-happy via-mood-calm to-mood-sad
+                       flex items-center justify-center shadow-lg shadow-mood-calm/20"
+          >
+            <span className="text-base sm:text-lg">🌍</span>
+            {/* Orbit ring */}
+            <div className="absolute inset-0 rounded-full border border-white/20 animate-pulse" />
+          </motion.div>
+
+          <div>
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-mood-calm to-mood-happy 
+                           bg-clip-text text-transparent drop-shadow-lg">
+              WorldMood-AI
+            </h1>
+            <p className="hidden sm:block text-xs text-gray-400 tracking-wide">Global Mood Map</p>
           </div>
-        )}
+        </div>
+
+        {/* Live Status Badge */}
+        <div className="pointer-events-auto flex items-center gap-4">
+          {/* Live indicator */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full 
+                       bg-surface/80 backdrop-blur-md border border-border shadow-lg"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mood-happy opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-mood-happy"></span>
+            </span>
+            <span className="text-xs font-medium text-mood-happy">LIVE</span>
+          </motion.div>
+
+          {/* Updated timestamp */}
+          {updatedAt && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-xs text-gray-500 bg-surface/60 backdrop-blur-sm 
+                         px-3 py-1.5 rounded-full border border-border/50"
+            >
+              Updated {new Date(updatedAt).toLocaleTimeString()}
+            </motion.div>
+          )}
+        </div>
       </motion.header>
 
       {/* Loading state */}
@@ -99,6 +141,9 @@ export default function Home() {
 
       {/* Legend */}
       <MoodLegend />
+
+      {/* Global Stats */}
+      {!loading && countries.length > 0 && <GlobalStats countries={countries} />}
 
       {/* Spike alerts */}
       <SpikeAlert />

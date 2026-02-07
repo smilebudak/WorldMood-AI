@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "MoodAtlas – Global Mood Map",
+  title: "WorldMood-AI – Global Mood Map",
   description:
     "Visualize the emotional mood of countries on a world map, derived from music listening data.",
 };

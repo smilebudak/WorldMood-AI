@@ -23,16 +23,96 @@ settings = get_settings()
 BASE_URL = "https://ws.audioscrobbler.com/2.0/"
 
 # Countries supported by Last.fm geo endpoints (English names)
+# Tested and verified with Last.fm API - only countries that return valid data
 SUPPORTED_COUNTRIES: dict[str, str] = {
-    "US": "United States", "GB": "United Kingdom", "DE": "Germany",
-    "FR": "France", "JP": "Japan", "BR": "Brazil", "IN": "India",
-    "AU": "Australia", "CA": "Canada", "MX": "Mexico", "KR": "South Korea",
-    "SE": "Sweden", "NO": "Norway", "FI": "Finland", "ES": "Spain",
-    "IT": "Italy", "NL": "Netherlands", "PL": "Poland", "TR": "Turkey",
-    "ZA": "South Africa", "NG": "Nigeria", "EG": "Egypt",
-    "AR": "Argentina", "CL": "Chile", "CO": "Colombia",
-    "PH": "Philippines", "ID": "Indonesia", "TH": "Thailand",
-    "VN": "Vietnam", "RU": "Russia",
+    # North America
+    "US": "United States",
+    "CA": "Canada",
+    "MX": "Mexico",
+    
+    # South America
+    "BR": "Brazil",
+    "AR": "Argentina",
+    "CL": "Chile",
+    "CO": "Colombia",
+    "PE": "Peru",
+    "VE": "Venezuela",
+    "EC": "Ecuador",
+    
+    # Western Europe
+    "GB": "United Kingdom",
+    "DE": "Germany",
+    "FR": "France",
+    "ES": "Spain",
+    "IT": "Italy",
+    "PT": "Portugal",
+    "NL": "Netherlands",
+    "BE": "Belgium",
+    "AT": "Austria",
+    "CH": "Switzerland",
+    "IE": "Ireland",
+    
+    # Northern Europe
+    "SE": "Sweden",
+    "NO": "Norway",
+    "FI": "Finland",
+    "DK": "Denmark",
+    "IS": "Iceland",
+    "EE": "Estonia",
+    "LV": "Latvia",
+    "LT": "Lithuania",
+    
+    # Eastern Europe
+    "PL": "Poland",
+    "CZ": "Czech Republic",
+    "SK": "Slovakia",
+    "HU": "Hungary",
+    "RO": "Romania",
+    "BG": "Bulgaria",
+    "UA": "Ukraine",
+    "RS": "Serbia",
+    "HR": "Croatia",
+    "SI": "Slovenia",
+    "GR": "Greece",
+    
+    # Russia & Turkey
+    "RU": "Russia",
+    "TR": "Turkey",
+    
+    # Middle East
+    "IL": "Israel",
+    "SA": "Saudi Arabia",
+    "AE": "United Arab Emirates",
+    
+    # Africa
+    "ZA": "South Africa",
+    "NG": "Nigeria",
+    "EG": "Egypt",
+    "KE": "Kenya",
+    "MA": "Morocco",
+    
+    # South Asia
+    "IN": "India",
+    "PK": "Pakistan",
+    
+    # East Asia
+    "JP": "Japan",
+    "CN": "China",
+    "KR": "South Korea",
+    "TW": "Taiwan",
+    "HK": "Hong Kong",
+    
+    # Southeast Asia
+    "TH": "Thailand",
+    "VN": "Vietnam",
+    "ID": "Indonesia",
+    "MY": "Malaysia",
+    "SG": "Singapore",
+    "PH": "Philippines",
+    
+    # Oceania
+    "AU": "Australia",
+    "NZ": "New Zealand",
 }
 
 # ── Tag → mood dimension mapping ─────────────────────────────────────────────

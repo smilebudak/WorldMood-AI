@@ -31,17 +31,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("ingest")
 settings = get_settings()
 
-COUNTRY_NAMES: dict[str, str] = {
-    "US": "United States", "GB": "United Kingdom", "DE": "Germany",
-    "FR": "France", "JP": "Japan", "BR": "Brazil", "IN": "India",
-    "AU": "Australia", "CA": "Canada", "MX": "Mexico", "KR": "South Korea",
-    "SE": "Sweden", "NO": "Norway", "FI": "Finland", "ES": "Spain",
-    "IT": "Italy", "NL": "Netherlands", "PL": "Poland", "TR": "Turkey",
-    "ZA": "South Africa", "NG": "Nigeria", "EG": "Egypt",
-    "AR": "Argentina", "CL": "Chile", "CO": "Colombia",
-    "PH": "Philippines", "ID": "Indonesia", "TH": "Thailand",
-    "VN": "Vietnam", "RU": "Russia",
-}
+# Using SUPPORTED_COUNTRIES from lastfm_service
 
 
 async def run() -> None:
@@ -72,7 +62,7 @@ async def run() -> None:
             await svc.upsert_mood(
                 {
                     "country_code": cc,
-                    "country_name": COUNTRY_NAMES.get(cc, cc),
+                    "country_name": SUPPORTED_COUNTRIES.get(cc, cc),
                     "date": dt.datetime.utcnow(),
                     "mood_score": mood.mood_score,
                     "mood_label": mood.mood_label,

@@ -1,5 +1,9 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Enable mock data when backend is unavailable (for frontend development)
+// Set NEXT_PUBLIC_USE_MOCK=true to use mock data
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface CountryMood {
@@ -59,17 +63,32 @@ async function fetcher<T>(path: string): Promise<T> {
 }
 
 export async function fetchGlobalMood(): Promise<GlobalMoodResponse> {
+  if (USE_MOCK_DATA) {
+    const { mockGlobalMood } = await import("./mockData");
+    return mockGlobalMood;
+  }
   return fetcher<GlobalMoodResponse>("/mood/global");
 }
 
 export async function fetchCountryDetail(
   countryCode: string
 ): Promise<CountryDetailResponse> {
+  if (USE_MOCK_DATA) {
+    const { getMockCountryDetail } = await import("./mockData");
+    const data = getMockCountryDetail(countryCode);
+    if (!data) throw new Error(`Country not found: ${countryCode}`);
+    return data;
+  }
   return fetcher<CountryDetailResponse>(
     `/mood/country/${countryCode.toUpperCase()}`
   );
 }
 
 export async function fetchSpikes(): Promise<SpikeListResponse> {
+  if (USE_MOCK_DATA) {
+    const { mockSpikes } = await import("./mockData");
+    return mockSpikes;
+  }
   return fetcher<SpikeListResponse>("/spikes");
 }
+

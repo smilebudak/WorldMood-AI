@@ -41,24 +41,52 @@ export default function CountryPanel({ countryCode, onClose }: CountryPanelProps
     <AnimatePresence>
       {countryCode && (
         <motion.aside
-          initial={{ x: 400, opacity: 0 }}
+          initial={{ x: "100%", opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 400, opacity: 0 }}
+          exit={{ x: "100%", opacity: 0 }}
           transition={{ type: "spring", damping: 26, stiffness: 240 }}
-          className="fixed right-0 top-0 h-full w-[380px] bg-surface/95 backdrop-blur-xl
+          className="fixed right-0 top-0 h-full w-full sm:w-[380px] bg-surface/95 backdrop-blur-xl
                      border-l border-border z-40 overflow-y-auto"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-border">
-            <h2 className="text-lg font-semibold text-white">
-              {data?.country_name || countryCode}
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-400" />
-            </button>
+          {/* Header with gradient */}
+          <div
+            className="relative p-5 border-b border-border overflow-hidden"
+            style={{
+              background: data ? `linear-gradient(135deg, ${meta?.color}15, transparent)` : undefined
+            }}
+          >
+            {/* Gradient overlay at top */}
+            {data && meta && (
+              <div
+                className="absolute top-0 left-0 right-0 h-1"
+                style={{ background: `linear-gradient(90deg, ${meta.color}, ${meta.color}50, transparent)` }}
+              />
+            )}
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {data && meta && (
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-lg"
+                    style={{
+                      background: `linear-gradient(135deg, ${meta.color}30, ${meta.color}10)`,
+                      border: `1px solid ${meta.color}40`
+                    }}
+                  >
+                    {meta.emoji}
+                  </div>
+                )}
+                <h2 className="text-xl font-bold text-white">
+                  {data?.country_name || countryCode}
+                </h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl hover:bg-white/10 transition-colors border border-white/10"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
           </div>
 
           {loading && (

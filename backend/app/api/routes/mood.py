@@ -6,15 +6,16 @@ import datetime as dt
 import json
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 
 from app.api.deps import get_redis, get_db
 from app.config import get_settings
 from app.models.schemas import GlobalMoodResponse, CountryMoodResponse
 from app.services.trends_service import TrendsService
-from app.services.lastfm_service import LastFmService
+from app.services.lastfm_service import LastFmService, SUPPORTED_COUNTRIES
 from app.services.news_service import NewsService
 from app.core.mood_engine import compute_mood
+from app.db.session import async_session_factory
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/mood", tags=["mood"])
@@ -58,8 +59,6 @@ async def get_global_mood(
     market_features = await lastfm.fetch_all_markets()
     countries: list[CountryMoodResponse] = []
 
-    COUNTRY_NAMES = _country_names()
-
     for cc, feat in market_features.items():
         sentiment = await news.fetch_sentiment(cc)
         mood = compute_mood(
@@ -72,7 +71,7 @@ async def get_global_mood(
         countries.append(
             CountryMoodResponse(
                 country_code=cc,
-                country_name=COUNTRY_NAMES.get(cc, cc),
+                country_name=SUPPORTED_COUNTRIES.get(cc, cc),
                 date=dt.datetime.utcnow(),
                 mood_score=mood.mood_score,
                 mood_label=mood.mood_label,
@@ -89,6 +88,30 @@ async def get_global_mood(
 
     resp = GlobalMoodResponse(updated_at=dt.datetime.utcnow(), countries=countries)
 
+    # 4. Save to DB in background
+    if db:
+        try:
+            svc = TrendsService(db)
+            for country in countries:
+                await svc.upsert_mood({
+                    "country_code": country.country_code,
+                    "country_name": country.country_name,
+                    "date": country.date,
+                    "mood_score": country.mood_score,
+                    "mood_label": country.mood_label,
+                    "color_code": country.color_code,
+                    "valence": country.valence,
+                    "energy": country.energy,
+                    "danceability": country.danceability,
+                    "acousticness": country.acousticness,
+                    "top_genre": country.top_genre,
+                    "top_track": country.top_track,
+                    "news_sentiment": country.news_sentiment,
+                })
+            logger.info("Saved %d mood records to database", len(countries))
+        except Exception as e:
+            logger.error("Failed to save mood to DB: %s", e)
+
     if cache:
         try:
             await cache.setex(CACHE_KEY, settings.CACHE_TTL_SECONDS, resp.model_dump_json())
@@ -98,15 +121,4 @@ async def get_global_mood(
     return resp
 
 
-def _country_names() -> dict[str, str]:
-    return {
-        "US": "United States", "GB": "United Kingdom", "DE": "Germany",
-        "FR": "France", "JP": "Japan", "BR": "Brazil", "IN": "India",
-        "AU": "Australia", "CA": "Canada", "MX": "Mexico", "KR": "South Korea",
-        "SE": "Sweden", "NO": "Norway", "FI": "Finland", "ES": "Spain",
-        "IT": "Italy", "NL": "Netherlands", "PL": "Poland", "TR": "Turkey",
-        "ZA": "South Africa", "NG": "Nigeria", "EG": "Egypt",
-        "AR": "Argentina", "CL": "Chile", "CO": "Colombia",
-        "PH": "Philippines", "ID": "Indonesia", "TH": "Thailand",
-        "VN": "Vietnam", "RU": "Russia",
-    }
+# _country_names removed - using SUPPORTED_COUNTRIES from lastfm_service instead

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # --- Redis ---
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    CACHE_TTL_SECONDS: int = 600  # 10 minutes
+    CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", "600"))  # 10 minutes default
 
     # --- Music data provider ---
     MUSIC_PROVIDER: str = os.getenv("MUSIC_PROVIDER", "lastfm")

@@ -7,6 +7,7 @@ pydantic-settings>=2.2,<3
 sqlalchemy[asyncio]>=2.0,<3
 asyncpg>=0.29,<1
 alembic>=1.13,<2
+psycopg2-binary>=2.9,<3  # For Alembic migrations (sync driver)
 
 # Redis
 redis>=5.0,<6

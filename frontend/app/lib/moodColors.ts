@@ -59,7 +59,7 @@ export function getMoodEmoji(label: string): string {
 export function buildFillColorExpression(
   countries: { country_code: string; color_code: string }[]
 ): any[] {
-  const expr: any[] = ["match", ["get", "iso_3166_1_alpha_2"]];
+  const expr: any[] = ["match", ["get", "iso_3166_1"]];
   for (const c of countries) {
     expr.push(c.country_code, c.color_code);
   }

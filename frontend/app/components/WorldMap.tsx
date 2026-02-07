@@ -92,10 +92,16 @@ export default function WorldMap({ countries, onCountryClick, onCountryHover }: 
   // Update fill colors when countries data changes
   useEffect(() => {
     const map = mapRef.current;
+
     if (!map || !countries.length) return;
 
     const setColors = () => {
-      if (!map.getLayer(FILL_LAYER)) return;
+
+      if (!map.getLayer(FILL_LAYER)) {
+        // Layer not ready yet, retry after a short delay
+        setTimeout(setColors, 100);
+        return;
+      }
 
       const expr = buildFillColorExpression(
         countries.map((c) => ({
@@ -104,13 +110,16 @@ export default function WorldMap({ countries, onCountryClick, onCountryHover }: 
         }))
       );
 
+
       map.setPaintProperty(FILL_LAYER, "fill-color", expr as any);
     };
 
     if (map.isStyleLoaded()) {
+
       setColors();
     } else {
-      map.on("load", setColors);
+
+      map.once("load", setColors);
     }
   }, [countries]);
 
@@ -125,7 +134,7 @@ export default function WorldMap({ countries, onCountryClick, onCountryHover }: 
       const features = map.queryRenderedFeatures(e.point, { layers: [FILL_LAYER] });
 
       if (features.length > 0) {
-        const cc = features[0].properties?.iso_3166_1_alpha_2 as string;
+        const cc = features[0].properties?.iso_3166_1 as string;
         map.getCanvas().style.cursor = "pointer";
 
         if (cc !== hoveredRef.current) {
@@ -151,7 +160,7 @@ export default function WorldMap({ countries, onCountryClick, onCountryHover }: 
     const onClick = (e: mapboxgl.MapMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, { layers: [FILL_LAYER] });
       if (features.length > 0) {
-        const cc = features[0].properties?.iso_3166_1_alpha_2 as string;
+        const cc = features[0].properties?.iso_3166_1 as string;
         if (cc) onCountryClick(cc);
       }
     };
