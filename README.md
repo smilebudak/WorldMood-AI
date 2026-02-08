@@ -15,6 +15,7 @@ cd WorldMood-AI
 
 # 2. Create environment file
 cp .env.example .env
+# Add your API keys: GEMINI_API_KEY, LASTFM_API_KEY, NEWS_API_KEY, MAPBOX_TOKEN
 
 # 3. Start all services
 docker-compose up -d
@@ -22,10 +23,13 @@ docker-compose up -d
 # 4. Initialize database tables
 docker-compose exec backend python scripts/create_tables.py
 
-# 5. Open application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8000
-# API Docs: http://localhost:8000/docs
+# 5. Populate database with initial data
+docker-compose exec backend python scripts/daily_ingest.py
+
+# 6. Open application
+# Frontend: http://localhost:3001
+# Backend API: http://localhost:8001
+# API Docs: http://localhost:8001/docs
 ```
 
 ### Manual Setup

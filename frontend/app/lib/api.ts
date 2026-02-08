@@ -1,4 +1,8 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Use 'backend' hostname when running in Docker (server-side), 
+// but localhost when running in browser (client-side)
+const API_URL = typeof window === 'undefined' 
+  ? (process.env.NEXT_PUBLIC_API_URL_SSR || "http://backend:8000")
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001");
 
 // Enable mock data when backend is unavailable (for frontend development)
 // Set NEXT_PUBLIC_USE_MOCK=true to use mock data

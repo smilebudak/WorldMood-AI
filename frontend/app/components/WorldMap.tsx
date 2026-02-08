@@ -39,14 +39,23 @@ export default function WorldMap({ countries, onCountryClick, onCountryHover }: 
       container: containerRef.current,
       style: "mapbox://styles/mapbox/dark-v11",
       center: [20, 25],
-      zoom: 1.8,
-      projection: "mercator",
+      zoom: 1.5,
+      projection: { name: "globe" } as any, // 3D Globe!
       attributionControl: false,
     });
 
     map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
     map.on("load", () => {
+      // Add starfield background
+      map.setFog({
+        color: "rgb(10, 10, 20)",
+        "high-color": "rgb(20, 20, 40)",
+        "horizon-blend": 0.1,
+        "space-color": "rgb(5, 5, 15)",
+        "star-intensity": 0.8,
+      });
+
       // Use Mapbox's built-in country boundaries tileset
       map.addSource(COUNTRY_SOURCE, {
         type: "vector",

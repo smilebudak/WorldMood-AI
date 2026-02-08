@@ -26,6 +26,7 @@ from app.services.news_service import NewsService
 from app.services.trends_service import TrendsService
 from app.core.mood_engine import compute_mood
 from app.core.spike_detector import detect_spike
+from app.services.gemini_service import GeminiService
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("ingest")
@@ -41,6 +42,7 @@ async def run() -> None:
 
     lastfm = LastFmService()
     news = NewsService()
+    gemini = GeminiService()
 
     market_features = await lastfm.fetch_all_markets()
     logger.info("Fetched features for %d markets", len(market_features))
@@ -58,6 +60,18 @@ async def run() -> None:
                 acousticness=feat.get("acousticness", 0.5),
                 news_sentiment=sentiment,
             )
+
+            # Generate AI Summary
+            ai_summary = None
+            if headlines:
+                try:
+                    ai_summary = await gemini.generate_mood_summary(
+                        country_name=SUPPORTED_COUNTRIES.get(cc, cc),
+                        headlines=headlines[:5],
+                        mood_label=mood.mood_label
+                    )
+                except Exception as e:
+                    logger.error(f"Gemini failed for {cc}: {e}")
 
             # Convert headlines to JSON for storage
             import json
@@ -80,6 +94,7 @@ async def run() -> None:
                     "top_track": feat.get("top_track"),
                     "news_sentiment": sentiment,
                     "news_headlines": headlines_json,
+                    "news_summary": ai_summary,
                 }
             )
 

@@ -63,6 +63,7 @@ export function buildFillColorExpression(
   for (const c of countries) {
     expr.push(c.country_code, c.color_code);
   }
-  expr.push("#1e1e2e"); // default / no-data color
+  // Default color for countries without data: Calm blue
+  expr.push("#38bdf8");
   return expr;
 }
