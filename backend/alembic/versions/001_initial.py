@@ -1,7 +1,7 @@
-"""Initial schema for MoodAtlas
+"""Initial schema for WorldMood-AI
 
 Revision ID: 001_initial
-Revises: 
+Revises:
 Create Date: 2026-02-07 12:00:00.000000
 
 Creates the foundational database schema with two main tables:

@@ -1,19 +1,17 @@
-version: "3.9"
-
 services:
   # ── PostgreSQL ──────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: moodatlas
-      POSTGRES_PASSWORD: moodatlas
-      POSTGRES_DB: moodatlas
+      POSTGRES_USER: worldmood
+      POSTGRES_PASSWORD: worldmood
+      POSTGRES_DB: worldmood
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U moodatlas"]
+      test: ["CMD-SHELL", "pg_isready -U worldmood"]
       interval: 5s
       retries: 5
 
@@ -35,7 +33,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://moodatlas:moodatlas@postgres:5432/moodatlas
+      DATABASE_URL: postgresql+asyncpg://worldmood:worldmood@postgres:5432/worldmood
       REDIS_URL: redis://redis:6379/0
       # Allow both standard and new ports for convenience
       CORS_ORIGINS: '["http://localhost:3000", "http://localhost:3001"]'

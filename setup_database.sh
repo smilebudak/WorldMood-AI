@@ -1,135 +1,135 @@
 #!/bin/bash
 # =================================================================
-# MoodAtlas Quick Database Setup Script
+# WorldMood-AI Quick Database Setup Script
 # =================================================================
-# Bu script database kurulumunu otomatikleştirir
+# This script automates database setup
 # =================================================================
 
-set -e  # Hata durumunda dur
+set -e  # Stop on error
 
-echo "🚀 MoodAtlas Database Quick Setup"
+echo "🚀 WorldMood-AI Database Quick Setup"
 echo "================================================================="
 
-# Renk kodları
+# Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# PostgreSQL kurulu mu kontrol et
+# Check if PostgreSQL is installed
 if ! command -v psql &> /dev/null; then
-    echo -e "${RED}❌ PostgreSQL kurulu değil!${NC}"
+    echo -e "${RED}❌ PostgreSQL is not installed!${NC}"
     echo ""
-    echo "Lütfen PostgreSQL'i kurun:"
+    echo "Please install PostgreSQL:"
     echo "  macOS:   brew install postgresql@16"
     echo "  Ubuntu:  sudo apt install postgresql-16"
     exit 1
 fi
 
-echo -e "${GREEN}✅ PostgreSQL bulundu${NC}"
+echo -e "${GREEN}✅ PostgreSQL found${NC}"
 
-# PostgreSQL çalışıyor mu?
+# Is PostgreSQL running?
 if ! pg_isready -q; then
-    echo -e "${YELLOW}⚠️  PostgreSQL çalışmıyor, başlatılıyor...${NC}"
-    
+    echo -e "${YELLOW}⚠️  PostgreSQL is not running, starting...${NC}"
+
     if [[ "$OSTYPE" == "darwin"* ]]; then
         brew services start postgresql@16
     else
         sudo systemctl start postgresql
     fi
-    
+
     sleep 2
 fi
 
-echo -e "${GREEN}✅ PostgreSQL servisi aktif${NC}"
+echo -e "${GREEN}✅ PostgreSQL service is active${NC}"
 
-# Database'i oluştur
+# Create database
 echo ""
-echo "📦 Database oluşturuluyor..."
+echo "📦 Creating database..."
 echo "================================================================="
 
-if psql -U postgres -lqt | cut -d \| -f 1 | grep -qw moodatlas; then
-    echo -e "${YELLOW}⚠️  'moodatlas' database'i zaten mevcut${NC}"
-    read -p "Yeniden oluşturmak istiyor musunuz? (y/N): " -n 1 -r
+if psql -U postgres -lqt | cut -d \| -f 1 | grep -qw worldmood; then
+    echo -e "${YELLOW}⚠️  'worldmood' database already exists${NC}"
+    read -p "Do you want to recreate it? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        psql -U postgres -c "DROP DATABASE IF EXISTS moodatlas;"
-        psql -U postgres -c "DROP USER IF EXISTS moodatlas;"
-        echo -e "${GREEN}✅ Eski database silindi${NC}"
+        psql -U postgres -c "DROP DATABASE IF EXISTS worldmood;"
+        psql -U postgres -c "DROP USER IF EXISTS worldmood;"
+        echo -e "${GREEN}✅ Old database deleted${NC}"
     else
-        echo "Mevcut database korundu"
+        echo "Existing database preserved"
     fi
 fi
 
-# init_db.sql'i çalıştır
+# Run init_db.sql
 echo ""
-echo "🔧 init_db.sql çalıştırılıyor..."
+echo "🔧 Running init_db.sql..."
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 psql -U postgres -f "$SCRIPT_DIR/backend/init_db.sql" > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✅ Database başarıyla oluşturuldu${NC}"
+    echo -e "${GREEN}✅ Database created successfully${NC}"
 else
-    echo -e "${RED}❌ Database oluşturma hatası${NC}"
+    echo -e "${RED}❌ Database creation error${NC}"
     exit 1
 fi
 
-# .env dosyası oluştur
+# Create .env file
 echo ""
-echo "⚙️  .env dosyası oluşturuluyor..."
+echo "⚙️  Creating .env file..."
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
     cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
-    echo -e "${GREEN}✅ .env dosyası oluşturuldu${NC}"
-    echo -e "${YELLOW}⚠️  API anahtarlarını .env dosyasında doldurmayı unutmayın!${NC}"
+    echo -e "${GREEN}✅ .env file created${NC}"
+    echo -e "${YELLOW}⚠️  Don't forget to fill in API keys in the .env file!${NC}"
 else
-    echo -e "${YELLOW}⚠️  .env dosyası zaten mevcut${NC}"
+    echo -e "${YELLOW}⚠️  .env file already exists${NC}"
 fi
 
-# Python environment kontrol et
+# Check Python environment
 echo ""
-echo "🐍 Python environment kontrol ediliyor..."
+echo "🐍 Checking Python environment..."
 
 if [ -d "$SCRIPT_DIR/backend/venv" ]; then
     source "$SCRIPT_DIR/backend/venv/bin/activate"
-    echo -e "${GREEN}✅ Virtual environment aktifleştirildi${NC}"
+    echo -e "${GREEN}✅ Virtual environment activated${NC}"
 elif [ -f "$SCRIPT_DIR/backend/pyproject.toml" ]; then
     cd "$SCRIPT_DIR/backend"
     poetry install
-    echo -e "${GREEN}✅ Poetry dependencies yüklendi${NC}"
+    echo -e "${GREEN}✅ Poetry dependencies installed${NC}"
 else
-    echo -e "${YELLOW}⚠️  Python environment bulunamadı${NC}"
-    echo "Manuel olarak requirements yükleyin:"
+    echo -e "${YELLOW}⚠️  Python environment not found${NC}"
+    echo "Install requirements manually:"
     echo "  cd backend"
     echo "  pip install -r requirements.txt"
 fi
 
-# Tabloları oluştur
+# Create tables
 echo ""
-echo "📊 Database tabloları oluşturuluyor..."
+echo "📊 Creating database tables..."
 cd "$SCRIPT_DIR/backend"
 python scripts/create_tables.py
 
-# Database durumunu kontrol et
+# Check database status
 echo ""
-echo "🔍 Database durumu kontrol ediliyor..."
+echo "🔍 Checking database status..."
 python scripts/check_db.py
 
-# Özet
+# Summary
 echo ""
 echo "================================================================="
-echo -e "${GREEN}✨ Kurulum tamamlandı!${NC}"
+echo -e "${GREEN}✨ Setup completed!${NC}"
 echo "================================================================="
 echo ""
-echo "📋 Sonraki adımlar:"
+echo "📋 Next steps:"
 echo ""
-echo "1. API anahtarlarını ekleyin:"
+echo "1. Add API keys:"
 echo "   nano .env"
 echo ""
-echo "2. Backend'i başlatın:"
+echo "2. Start backend:"
 echo "   cd backend"
 echo "   uvicorn app.main:app --reload"
 echo ""
-echo "3. Veya Docker ile:"
+echo "3. Or with Docker:"
 echo "   docker-compose up"
 echo ""
 echo "================================================================="

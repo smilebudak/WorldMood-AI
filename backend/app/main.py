@@ -1,4 +1,4 @@
-"""MoodAtlas – FastAPI application entry point."""
+"""WorldMood-AI – FastAPI application entry point."""
 
 from __future__ import annotations
 

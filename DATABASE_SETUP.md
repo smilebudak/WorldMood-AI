@@ -1,83 +1,83 @@
-# 🗄️ PostgreSQL Database Kurulum Rehberi
+# 🗄️ PostgreSQL Database Setup Guide
 
-## 📋 Gereksinimler
-- PostgreSQL 12+ kurulu olmalı
-- Sunucu üzerinde `psql` komutuna erişim
+## 📋 Requirements
+- PostgreSQL 12+ must be installed
+- Access to `psql` command on the server
 
 ---
 
-## 🚀 Kurulum Adımları
+## 🚀 Setup Steps
 
-### 1️⃣ Database Oluşturma
+### 1️⃣ Creating the Database
 
-PostgreSQL'e bağlanın ve `init_db.sql` scriptini çalıştırın:
+Connect to PostgreSQL and run the `init_db.sql` script:
 
 ```bash
-# PostgreSQL'e root/postgres kullanıcısı ile bağlanın
+# Connect to PostgreSQL as root/postgres user
 psql -U postgres
 
-# Script dosyasını çalıştırın
+# Execute the script file
 \i /path/to/backend/init_db.sql
 
-# Veya doğrudan:
+# Or directly:
 psql -U postgres -f backend/init_db.sql
 ```
 
-Script aşağıdaki işlemleri yapar:
-- ✅ `moodatlas` kullanıcısı oluşturur
-- ✅ `moodatlas` database'i oluşturur
-- ✅ `country_mood` ve `mood_spike` tablolarını oluşturur
-- ✅ Gerekli indeksleri ekler
-- ✅ İzinleri ayarlar
+The script performs the following operations:
+- ✅ Creates the `worldmood` user
+- ✅ Creates the `worldmood` database
+- ✅ Creates the `country_mood` and `mood_spike` tables
+- ✅ Adds required indexes
+- ✅ Sets up permissions
 
 ---
 
-### 2️⃣ Environment Konfigürasyonu
+### 2️⃣ Environment Configuration
 
-#### Docker ile Kullanım (Önerilen)
+#### Using with Docker (Recommended)
 
-Docker Compose kullanıyorsanız, `.env` dosyasında:
+If you're using Docker Compose, in the `.env` file:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@postgres:5432/moodatlas
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@postgres:5432/worldmood
 ```
 
-Docker Compose PostgreSQL servisini otomatik olarak başlatır.
+Docker Compose automatically starts the PostgreSQL service.
 
-#### Manuel Sunucu Kurulumu
+#### Manual Server Setup
 
-Kendi PostgreSQL sunucunuzu kullanıyorsanız:
+If you're using your own PostgreSQL server:
 
-1. **`.env.example`'ı kopyalayın:**
+1. **Copy `.env.example`:**
 ```bash
 cp .env.example .env
 ```
 
-2. **`.env` dosyasını düzenleyin:**
+2. **Edit the `.env` file:**
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@<SUNUCU_IP>:5432/moodatlas
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@<SERVER_IP>:5432/worldmood
 ```
 
-`<SUNUCU_IP>` yerine:
-- Yerel kullanım: `localhost` veya `127.0.0.1`
-- Uzak sunucu: Sunucunun IP adresi (örn: `192.168.1.100`)
-- Domain: Sunucu domain'i (örn: `db.example.com`)
+Replace `<SERVER_IP>` with:
+- Local use: `localhost` or `127.0.0.1`
+- Remote server: Server's IP address (e.g., `192.168.1.100`)
+- Domain: Server domain (e.g., `db.example.com`)
 
 ---
 
-### 3️⃣ Database Bağlantısını Test Etme
+### 3️⃣ Testing the Database Connection
 
-Backend klasöründen:
+From the backend folder:
 
 ```bash
 cd backend
 
-# Python environment'ını aktifleştirin
-# poetry shell  # eğer poetry kullanıyorsanız
-# veya
-# source venv/bin/activate  # eğer venv kullanıyorsanız
+# Activate Python environment
+# poetry shell  # if using poetry
+# or
+# source venv/bin/activate  # if using venv
 
-# Database bağlantısını test edin
+# Test the database connection
 python -c "
 from app.db.session import engine
 import asyncio
@@ -85,7 +85,7 @@ import asyncio
 async def test():
     async with engine.begin() as conn:
         result = await conn.execute('SELECT 1')
-        print('✅ Database bağlantısı başarılı!')
+        print('✅ Database connection successful!')
 
 asyncio.run(test())
 "
@@ -93,119 +93,119 @@ asyncio.run(test())
 
 ---
 
-### 4️⃣ Alembic ile Migration (Opsiyonel)
+### 4️⃣ Migration with Alembic (Optional)
 
-Gelecekte schema değişiklikleri için Alembic kullanabilirsiniz:
+You can use Alembic for future schema changes:
 
 ```bash
-# Migration klasörü oluştur
+# Create migration folder
 cd backend
 alembic init alembic
 
-# Mevcut modelleri migration olarak kaydet
+# Save existing models as a migration
 alembic revision --autogenerate -m "Initial schema"
 
-# Migration'ları uygula
+# Apply migrations
 alembic upgrade head
 ```
 
 ---
 
-## 🔒 Güvenlik Notları
+## 🔒 Security Notes
 
-### Prodüksiyon Ortamı İçin:
+### For Production Environment:
 
-1. **Güçlü şifreler kullanın:**
+1. **Use strong passwords:**
 ```sql
-ALTER USER moodatlas WITH PASSWORD 'güçlü_ve_karmaşık_şifre_123!@#';
+ALTER USER worldmood WITH PASSWORD 'strong_and_complex_password_123!@#';
 ```
 
-2. **`.env` dosyasını asla commit etmeyin:**
+2. **Never commit the `.env` file:**
 ```bash
-# .gitignore içinde olduğundan emin olun
+# Make sure it's in .gitignore
 echo ".env" >> .gitignore
 ```
 
-3. **PostgreSQL firewall ayarları:**
+3. **PostgreSQL firewall settings:**
 ```bash
-# Sadece belirli IP'lerden erişime izin verin
-# postgresql.conf ve pg_hba.conf dosyalarını yapılandırın
+# Allow access only from specific IPs
+# Configure postgresql.conf and pg_hba.conf files
 ```
 
-4. **SSL/TLS kullanın:**
+4. **Use SSL/TLS:**
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:password@host:5432/moodatlas?ssl=require
+DATABASE_URL=postgresql+asyncpg://worldmood:password@host:5432/worldmood?ssl=require
 ```
 
 ---
 
-## 🐛 Sorun Giderme
+## 🐛 Troubleshooting
 
-### Bağlantı Hatası: "could not connect to server"
+### Connection Error: "could not connect to server"
 ```bash
-# PostgreSQL servisini kontrol edin
+# Check PostgreSQL service
 sudo systemctl status postgresql
 
-# Servisi başlatın
+# Start the service
 sudo systemctl start postgresql
 ```
 
-### İzin Hatası: "permission denied"
+### Permission Error: "permission denied"
 ```sql
--- PostgreSQL'de izinleri yeniden verin
-GRANT ALL PRIVILEGES ON DATABASE moodatlas TO moodatlas;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO moodatlas;
+-- Re-grant permissions in PostgreSQL
+GRANT ALL PRIVILEGES ON DATABASE worldmood TO worldmood;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO worldmood;
 ```
 
-### Port 5432 kullanımda
+### Port 5432 is in use
 ```bash
-# Hangi processin portu kullandığını kontrol edin
+# Check which process is using the port
 lsof -i :5432
 ```
 
 ---
 
-## 📊 Faydalı SQL Komutları
+## 📊 Useful SQL Commands
 
 ```sql
--- Tabloları listele
+-- List tables
 \dt
 
--- Tablo yapısını göster
+-- Show table structure
 \d country_mood
 \d mood_spike
 
--- Mevcut verileri kontrol et
+-- Check existing data
 SELECT COUNT(*) FROM country_mood;
 SELECT COUNT(*) FROM mood_spike;
 
--- En son kayıtları göster
+-- Show latest records
 SELECT * FROM country_mood ORDER BY created_at DESC LIMIT 5;
 SELECT * FROM mood_spike ORDER BY detected_at DESC LIMIT 5;
 
--- Database boyutunu kontrol et
-SELECT pg_size_pretty(pg_database_size('moodatlas'));
+-- Check database size
+SELECT pg_size_pretty(pg_database_size('worldmood'));
 ```
 
 ---
 
-## 🔄 Backup ve Restore
+## 🔄 Backup and Restore
 
-### Backup Oluşturma:
+### Creating a Backup:
 ```bash
-pg_dump -U moodatlas -h localhost moodatlas > backup_$(date +%Y%m%d).sql
+pg_dump -U worldmood -h localhost worldmood > backup_$(date +%Y%m%d).sql
 ```
 
 ### Restore:
 ```bash
-psql -U moodatlas -h localhost moodatlas < backup_20260207.sql
+psql -U worldmood -h localhost worldmood < backup_20260207.sql
 ```
 
 ---
 
-## 📞 Yardım
+## 📞 Help
 
-Sorun yaşarsanız:
-1. PostgreSQL loglarını kontrol edin: `/var/log/postgresql/`
-2. Backend loglarını kontrol edin
-3. `.env` dosyasındaki `DEBUG=True` yapın ve detaylı logları inceleyin
+If you experience issues:
+1. Check PostgreSQL logs: `/var/log/postgresql/`
+2. Check backend logs
+3. Set `DEBUG=True` in the `.env` file and review detailed logs

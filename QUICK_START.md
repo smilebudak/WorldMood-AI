@@ -1,55 +1,55 @@
-# 🚀 MoodAtlas - Quick Start Guide
+# 🚀 WorldMood-AI - Quick Start Guide
 
-## Backend Developer - Hızlı Başlangıç
+## Backend Developer - Quick Setup
 
-Arkadaşın Last.fm entegrasyonunu ekledi. İşte kurulum adımları:
+This guide will help you set up the WorldMood-AI backend with Last.fm integration.
 
 ---
 
-## ⚡ 1 Dakikada Başla
+## ⚡ Get Started in 1 Minute
 
-### 1️⃣ .env Dosyasını Oluştur
+### 1️⃣ Create .env File
 
 ```bash
-cd /Users/ismailbudak/Desktop/WorldMood-AI
+cd WorldMood-AI
 cp .env.example .env
 nano .env
 ```
 
-**`.env` içeriği:**
+**`.env` contents:**
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@localhost:5432/moodatlas
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@localhost:5432/worldmood
 REDIS_URL=redis://localhost:6379/0
 LASTFM_API_KEY=your_lastfm_api_key_here
 ```
 
 ---
 
-### 2️⃣ PostgreSQL'i Hazırla
+### 2️⃣ Prepare PostgreSQL
 
 ```bash
-# PostgreSQL başlat (macOS)
+# Start PostgreSQL (macOS)
 brew services start postgresql@16
 
-# Database oluştur
+# Create database
 psql -U postgres -f backend/init_db.sql
 ```
 
-**Veya otomatik script:**
+**Or use the automated script:**
 ```bash
 ./setup_database.sh
 ```
 
 ---
 
-### 3️⃣ Dependencies'leri Yükle
+### 3️⃣ Install Dependencies
 
 ```bash
 cd backend
 pip3 install -r requirements.txt
 ```
 
-**requirements.txt içeriği:**
+**requirements.txt contents:**
 ```plaintext
 fastapi>=0.110,<1
 uvicorn[standard]>=0.29,<1
@@ -69,33 +69,33 @@ python-dotenv>=1.0,<2
 
 ---
 
-### 4️⃣ Migration'ları Çalıştır
+### 4️⃣ Run Migrations
 
 ```bash
 cd backend
 python3 scripts/run_migrations.py
 ```
 
-**Çıktı:**
+**Output:**
 ```
-🔄 MoodAtlas Database Migration
+🔄 WorldMood-AI Database Migration
 ============================================================
-📍 Mevcut migration durumu:
+📍 Current migration status:
 ...
-⬆️  Migration'lar uygulanıyor...
-✅ Migration'lar başarıyla uygulandı!
+⬆️  Applying migrations...
+✅ Migrations applied successfully!
 ```
 
 ---
 
-### 5️⃣ Backend'i Başlat
+### 5️⃣ Start Backend
 
 ```bash
 cd backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-**Beklenen çıktı:**
+**Expected output:**
 ```
 INFO:     Started server process
 INFO:     Waiting for application startup.
@@ -106,19 +106,19 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 
 ---
 
-### 6️⃣ Test Et!
+### 6️⃣ Test It!
 
-Backend ayağa kalktıktan sonra:
+After the backend is running:
 
 ```bash
 # Health check
 curl http://localhost:8000/health
 
-# Last.fm'den gerçek veri
+# Real data from Last.fm
 curl http://localhost:8000/mood/global
 ```
 
-**Beklenen response:**
+**Expected response:**
 ```json
 {
   "updated_at": "2026-02-07T12:00:00",
@@ -142,191 +142,191 @@ curl http://localhost:8000/mood/global
 
 ---
 
-## 🐘 pgAdmin'de Kontrol Et
+## 🐘 Check with pgAdmin
 
-### 1. pgAdmin'i Aç
+### 1. Open pgAdmin
 ```bash
 brew install --cask pgadmin4
 pgadmin4
 ```
 
-### 2. Server Ekle
+### 2. Add Server
 
 **General:**
-- Name: `MoodAtlas`
+- Name: `WorldMood-AI`
 
 **Connection:**
 - Host: `localhost`
 - Port: `5432`
-- Database: `moodatlas`
-- Username: `moodatlas`
-- Password: `moodatlas`
+- Database: `worldmood`
+- Username: `worldmood`
+- Password: `worldmood`
 
-### 3. Tabloları Gör
+### 3. View Tables
 
-Sol panelde:
+In the left panel:
 ```
-Servers → MoodAtlas → Databases → moodatlas 
+Servers → WorldMood-AI → Databases → worldmood
   → Schemas → public → Tables
-    ├── country_mood  ← Mood verileri
-    └── mood_spike    ← Mood değişimleri
+    ├── country_mood  ← Mood data
+    └── mood_spike    ← Mood changes
 ```
 
 ---
 
-## 🔄 Verileri Doldur (Opsiyonel)
+## 🔄 Populate Data (Optional)
 
-### Günlük Veri Toplama:
+### Daily Data Collection:
 
 ```bash
 cd backend
 python3 scripts/daily_ingest.py
 ```
 
-Bu script:
-- Last.fm'den tüm ülkeler için veri çeker
-- Mood hesaplar
-- Database'e kayeder
-- Spike'ları tespit eder
+This script:
+- Fetches data from Last.fm for all countries
+- Calculates mood scores
+- Saves to database
+- Detects spikes
 
 ---
 
-## 📊 Önemli Endpointler
+## 📊 Important Endpoints
 
-| Endpoint | Metod | Açıklama |
-|----------|-------|----------|
-| `/health` | GET | Sağlık kontrolü |
-| `/mood/global` | GET | Tüm ülkelerin anlık mood'u (Last.fm'den) |
-| `/country/{code}/mood` | GET | Belirli ülkenin mood detayı |
-| `/country/{code}/trend` | GET | Ülkenin 7 günlük trend'i |
-| `/spikes` | GET | Son mood spike'ları |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/mood/global` | GET | Current mood for all countries (from Last.fm) |
+| `/country/{code}/mood` | GET | Specific country mood details |
+| `/country/{code}/trend` | GET | 7-day trend for a country |
+| `/spikes` | GET | Recent mood spikes |
 
 ---
 
-## 🔍 Sorun Giderme
+## 🔍 Troubleshooting
 
-### PostgreSQL Bağlantı Hatası
+### PostgreSQL Connection Error
 
 ```bash
-# Servis çalışıyor mu?
+# Is the service running?
 pg_isready
 
-# Database var mı?
-psql -U postgres -l | grep moodatlas
+# Does the database exist?
+psql -U postgres -l | grep worldmood
 
-# Yoksa oluştur
+# If not, create it
 psql -U postgres -f backend/init_db.sql
 ```
 
-### Alembic Hatası
+### Alembic Error
 
 ```bash
-# Alembic kurulu mu?
+# Is Alembic installed?
 python3 -m alembic --version
 
-# Yoksa yükle
+# If not, install it
 pip3 install alembic psycopg2-binary
 
-# Migration durumu
+# Check migration status
 cd backend
 python3 -m alembic current
 ```
 
-### Last.fm API Hatası
+### Last.fm API Error
 
-**Hata:** `LASTFM_API_KEY not configured`
+**Error:** `LASTFM_API_KEY not configured`
 
-**Çözüm:** `.env` dosyasında API key'i kontrol et:
+**Solution:** Check the API key in `.env` file:
 ```env
 LASTFM_API_KEY=your_lastfm_api_key_here
 ```
 
-### Port Zaten Kullanımda
+### Port Already in Use
 
 ```bash
-# 8000 portunu kim kullanıyor?
+# Who is using port 8000?
 lsof -i :8000
 
-# Eğer eski process varsa öldür
+# Kill the old process if needed
 kill -9 <PID>
 ```
 
 ---
 
-## 📁 Proje Yapısı
+## 📁 Project Structure
 
 ```
 WorldMood-AI/
-├── .env                    ← API keys burada
+├── .env                    ← API keys here
 ├── backend/
-│   ├── alembic/            ← Migration dosyaları
+│   ├── alembic/            ← Migration files
 │   │   └── versions/
 │   │       └── 001_initial.py
 │   ├── app/
 │   │   ├── api/routes/
 │   │   │   └── mood.py     ← /mood/global endpoint
 │   │   ├── services/
-│   │   │   └── lastfm_service.py  ← Last.fm entegrasyonu
+│   │   │   └── lastfm_service.py  ← Last.fm integration
 │   │   ├── core/
-│   │   │   └── mood_engine.py     ← Mood hesaplama
+│   │   │   └── mood_engine.py     ← Mood calculation
 │   │   ├── db/
-│   │   │   └── models.py          ← Database modelleri
+│   │   │   └── models.py          ← Database models
 │   │   └── main.py                ← FastAPI app
 │   └── scripts/
 │       ├── run_migrations.py      ← Migration runner
-│       └── check_db.py            ← Database kontrolü
+│       └── check_db.py            ← Database check
 └── frontend/
     └── ...
 ```
 
 ---
 
-## 🎯 Ne Değişti?
+## 🎯 What's New?
 
-Arkadaşın yaptığı değişikler:
+Recent changes:
 
-1. **Last.fm Entegrasyonu**
-   - ✅ `lastfm_service.py` eklendi
+1. **Last.fm Integration**
+   - ✅ Added `lastfm_service.py`
    - ✅ Tag-based mood feature extraction
-   - ✅ 31 ülke desteği
+   - ✅ Support for 31 countries
 
-2. **Config Güncellemesi**
+2. **Config Updates**
    - ✅ `MUSIC_PROVIDER=lastfm`
-   - ✅ `LASTFM_API_KEY` eklendi
+   - ✅ Added `LASTFM_API_KEY`
 
-3. **Endpoint Değişikliği**
-   - ✅ `/mood/global` artık Last.fm'den gerçek veri döndürüyor
-   - ✅ Cache mekanizması (Redis)
-   - ✅ On-the-fly mood hesaplama
+3. **Endpoint Changes**
+   - ✅ `/mood/global` now returns real data from Last.fm
+   - ✅ Redis caching mechanism
+   - ✅ On-the-fly mood calculation
 
 ---
 
-## 🚀 Production'a Alma
+## 🚀 Deploying to Production
 
-### 1. Environment Değişkenleri
+### 1. Environment Variables
 
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:GÜÇLÜ_ŞİFRE@production-host:5432/moodatlas
+DATABASE_URL=postgresql+asyncpg://worldmood:STRONG_PASSWORD@production-host:5432/worldmood
 REDIS_URL=redis://production-redis:6379/0
 LASTFM_API_KEY=YOUR_PRODUCTION_KEY
 DEBUG=False
 ```
 
-### 2. Migration
+### 2. Run Migrations
 
 ```bash
 cd backend
 python3 scripts/run_migrations.py
 ```
 
-### 3. Gunicorn ile Başlat
+### 3. Start with Gunicorn
 
 ```bash
 pip3 install gunicorn
 gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
-### 4. Docker ile (Önerilen)
+### 4. With Docker (Recommended)
 
 ```bash
 docker-compose up -d
@@ -334,30 +334,30 @@ docker-compose up -d
 
 ---
 
-## 📚 İlgili Dokümantasyon
+## 📚 Related Documentation
 
-- **[DATABASE_DESIGN.md](DATABASE_DESIGN.md)** - Detaylı database schema
-- **[PGADMIN_REHBERI.md](PGADMIN_REHBERI.md)** - pgAdmin kullanımı
-- **[MIGRATION_REHBERI.md](MIGRATION_REHBERI.md)** - Migration detayları
-- **[HIZLI_BASLANGIC.md](HIZLI_BASLANGIC.md)** - pgAdmin hızlı başlangıç
+- **[DATABASE_DESIGN.md](DATABASE_DESIGN.md)** - Detailed database schema
+- **[DATABASE_README.md](DATABASE_README.md)** - Database setup guide
+- **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - Manual database setup
+- **[BACKEND_DATABASE_GUIDE.md](BACKEND_DATABASE_GUIDE.md)** - Backend developer guide
 
 ---
 
 ## ✅ Checklist
 
-Başlamadan önce kontrol et:
+Before getting started, verify:
 
-- [ ] PostgreSQL 16+ kurulu
-- [ ] Python 3.11+ kurulu
-- [ ] `.env` dosyası oluşturuldu
-- [ ] `LASTFM_API_KEY` girildi
-- [ ] PostgreSQL servisi çalışıyor
-- [ ] Database `moodatlas` oluşturuldu
-- [ ] Dependencies yüklendi (`pip3 install -r requirements.txt`)
-- [ ] Migration'lar uygulandı
-- [ ] Backend başlatıldı
-- [ ] `/mood/global` endpoint'i test edildi
+- [ ] PostgreSQL 16+ installed
+- [ ] Python 3.11+ installed
+- [ ] `.env` file created
+- [ ] `LASTFM_API_KEY` entered
+- [ ] PostgreSQL service running
+- [ ] Database `worldmood` created
+- [ ] Dependencies installed (`pip3 install -r requirements.txt`)
+- [ ] Migrations applied
+- [ ] Backend started
+- [ ] `/mood/global` endpoint tested
 
 ---
 
-**🎉 Tebrikler! Backend hazır. Last.fm'den gerçek veri çekmeye başladı!**
+**🎉 Congratulations! Your backend is ready and fetching real data from Last.fm!**

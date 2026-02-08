@@ -1,6 +1,5 @@
 """
-Migration helper script
-Kolay migration çalıştırma için
+Migration helper script for easy migration execution.
 """
 import subprocess
 import sys
@@ -8,13 +7,13 @@ from pathlib import Path
 import os
 
 def run_command(cmd, cwd=None):
-    """Komutu çalıştır ve outputu göster."""
-    print(f"🚀 Çalıştırılıyor: {cmd}")
+    """Execute command and display output."""
+    print(f"🚀 Running: {cmd}")
     print("=" * 60)
     result = subprocess.run(
-        cmd, 
-        shell=True, 
-        capture_output=True, 
+        cmd,
+        shell=True,
+        capture_output=True,
         text=True,
         cwd=cwd
     )
@@ -26,53 +25,53 @@ def run_command(cmd, cwd=None):
 def main():
     backend_dir = Path(__file__).parent.parent
     os.chdir(backend_dir)
-    
-    print("🔄 MoodAtlas Database Migration")
+
+    print("🔄 WorldMood-AI Database Migration")
     print("=" * 60)
     print()
-    
-    # Python versiyonunu kontrol et
-    print("🐍 Python versiyonu:")
+
+    # Check Python version
+    print("🐍 Python version:")
     run_command("python3 --version")
     print()
-    
-    # Alembic kurulu mu kontrol et
-    print("🔍 Alembic kontrolü:")
+
+    # Check if Alembic is installed
+    print("🔍 Alembic check:")
     exitcode = run_command("python3 -m alembic --version")
     if exitcode != 0:
         print()
-        print("❌ Alembic kurulu değil!")
-        print("📦 Kurulum için:")
+        print("❌ Alembic not installed!")
+        print("📦 To install:")
         print("   pip install -r requirements.txt")
         sys.exit(1)
     print()
-    
-    # Current durumu göster
-    print("📍 Mevcut migration durumu:")
+
+    # Show current status
+    print("📍 Current migration status:")
     run_command("python3 -m alembic current")
     print()
-    
-    # Migration'ları çalıştır
-    print("⬆️  Migration'lar uygulanıyor...")
+
+    # Run migrations
+    print("⬆️  Applying migrations...")
     exitcode = run_command("python3 -m alembic upgrade head")
-    
+
     if exitcode == 0:
         print()
-        print("✅ Migration'lar başarıyla uygulandı!")
+        print("✅ Migrations applied successfully!")
         print()
-        print("📊 Yeni durum:")
+        print("📊 New status:")
         run_command("python3 -m alembic current")
         print()
-        print("💡 Database durumunu kontrol etmek için:")
+        print("💡 To check database status:")
         print("   python3 scripts/check_db.py")
     else:
         print()
-        print("❌ Migration'larda hata oluştu!")
+        print("❌ Migration error occurred!")
         print()
-        print("🔍 Sorun giderme:")
-        print("   1. .env dosyasını kontrol et")
-        print("   2. PostgreSQL servisini kontrol et: pg_isready")
-        print("   3. Database'in oluşturulduğundan emin ol")
+        print("🔍 Troubleshooting:")
+        print("   1. Check .env file")
+        print("   2. Check PostgreSQL service: pg_isready")
+        print("   3. Ensure database is created")
         sys.exit(1)
 
 if __name__ == "__main__":

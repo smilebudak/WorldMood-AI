@@ -1,8 +1,8 @@
-# 🗄️ MoodAtlas Database Design
+# 🗄️ WorldMood-AI Database Design
 
 ## 📊 Schema Overview
 
-MoodAtlas uses PostgreSQL to store global mood data aggregated from music trends (Last.fm) and news sentiment.
+WorldMood-AI uses PostgreSQL to store global mood data aggregated from music trends (Last.fm) and news sentiment.
 
 ### Architecture:
 ```
@@ -424,9 +424,9 @@ CREATE TABLE global_events (
 1. **Database User Permissions:**
 ```sql
 -- Read-only user for analytics
-CREATE USER moodatlas_readonly WITH PASSWORD 'xxx';
-GRANT CONNECT ON DATABASE moodatlas TO moodatlas_readonly;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO moodatlas_readonly;
+CREATE USER worldmood_readonly WITH PASSWORD 'xxx';
+GRANT CONNECT ON DATABASE worldmood TO worldmood_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO worldmood_readonly;
 ```
 
 2. **SSL/TLS in Production:**
@@ -437,10 +437,10 @@ DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db?ssl=require
 3. **Backup Strategy:**
 ```bash
 # Daily backup
-pg_dump -U moodatlas moodatlas > backup_$(date +%Y%m%d).sql
+pg_dump -U worldmood worldmood > backup_$(date +%Y%m%d).sql
 
 # Automated with cron
-0 2 * * * pg_dump -U moodatlas moodatlas > /backups/moodatlas_$(date +\%Y\%m\%d).sql
+0 2 * * * pg_dump -U worldmood worldmood > /backups/worldmood_$(date +\%Y\%m\%d).sql
 ```
 
 ---

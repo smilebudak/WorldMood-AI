@@ -1,18 +1,18 @@
 -- ================================================================
--- MoodAtlas Database Initialization Script
+-- WorldMood-AI Database Initialization Script
 -- ================================================================
--- PostgreSQL sürüm 12+ gerektirir
--- Bu script manuel olarak PostgreSQL'de çalıştırılmalıdır
+-- Requires PostgreSQL version 12+
+-- This script should be run manually in PostgreSQL
 -- ================================================================
 
--- 1. Database ve kullanıcı oluştur
-CREATE USER moodatlas WITH PASSWORD 'moodatlas';
-CREATE DATABASE moodatlas OWNER moodatlas;
+-- 1. Create database and user
+CREATE USER worldmood WITH PASSWORD 'worldmood';
+CREATE DATABASE worldmood OWNER worldmood;
 
--- 2. moodatlas database'ine bağlan
-\c moodatlas
+-- 2. Connect to worldmood database
+\c worldmood
 
--- 3. Tabloları oluştur
+-- 3. Create tables
 CREATE TABLE country_mood (
     id SERIAL PRIMARY KEY,
     country_code VARCHAR(3) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE mood_spike (
     reason TEXT
 );
 
--- 4. İndeksleri oluştur
+-- 4. Create indexes
 CREATE INDEX idx_country_mood_code ON country_mood(country_code);
 CREATE INDEX idx_country_mood_date ON country_mood(date);
 CREATE INDEX idx_country_mood_code_date ON country_mood(country_code, date);
@@ -50,11 +50,11 @@ CREATE INDEX idx_mood_spike_code ON mood_spike(country_code);
 CREATE INDEX idx_mood_spike_detected ON mood_spike(detected_at);
 CREATE INDEX idx_mood_spike_code_detected ON mood_spike(country_code, detected_at);
 
--- 5. Kullanıcı izinlerini ayarla
-GRANT ALL PRIVILEGES ON DATABASE moodatlas TO moodatlas;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO moodatlas;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO moodatlas;
+-- 5. Set user permissions
+GRANT ALL PRIVILEGES ON DATABASE worldmood TO worldmood;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO worldmood;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO worldmood;
 
--- 6. Varsayılan izinleri ayarla (gelecekte oluşturulacak tablolar için)
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO moodatlas;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO moodatlas;
+-- 6. Set default permissions (for future tables)
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO worldmood;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO worldmood;

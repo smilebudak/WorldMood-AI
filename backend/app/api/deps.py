@@ -58,5 +58,3 @@ async def get_db():
         logger.warning(f"Database unavailable: {e} – running in live-only mode")
         _db_failed = True
         yield None
-        _db_failed = True
-        yield None

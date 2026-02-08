@@ -17,11 +17,11 @@ import numpy as np
 # ── Mood definitions ──────────────────────────────────────────────────────────
 
 MOOD_MAP: dict[str, dict] = {
-    "Happy":   {"range": (0.5, 1.0),   "color": "#22c55e", "emoji": "😊"},
-    "Calm":    {"range": (0.15, 0.5),   "color": "#38bdf8", "emoji": "😌"},
-    "Sad":     {"range": (-0.5, -0.15), "color": "#8b5cf6", "emoji": "😢"},
-    "Angry":   {"range": (-1.0, -0.5),  "color": "#ef4444", "emoji": "😠"},
-    "Anxious": {"range": (-0.5, 0.15),  "color": "#f97316", "emoji": "😰"},
+    "Happy":   {"range": (0.20, 1.0),   "color": "#22c55e", "emoji": "😊"},
+    "Calm":    {"range": (0.05, 0.20),   "color": "#38bdf8", "emoji": "😌"},
+    "Sad":     {"range": (-0.35, -0.05), "color": "#8b5cf6", "emoji": "😢"},
+    "Angry":   {"range": (-1.0, -0.35),  "color": "#ef4444", "emoji": "😠"},
+    "Anxious": {"range": (-0.20, 0.05),  "color": "#f97316", "emoji": "😰"},
 }
 
 
@@ -66,7 +66,7 @@ def compute_mood(
 
     mood_score = float(np.clip(base, -1.0, 1.0))
 
-    label, color, emoji = _classify(mood_score, energy, valence)
+    label, color, emoji = _classify(mood_score, energy, valence, news_sentiment)
 
     return MoodResult(
         mood_score=round(mood_score, 4),
@@ -76,21 +76,33 @@ def compute_mood(
     )
 
 
-def _classify(score: float, energy: float, valence: float) -> tuple[str, str, str]:
-    """Map score to a mood label with energy-based disambiguation."""
+def _classify(
+    score: float, energy: float, valence: float,
+    news_sentiment: Optional[float] = None,
+) -> tuple[str, str, str]:
+    """Map score to a mood label. Uses news sentiment + energy for better variety."""
 
-    if score >= 0.5:
+    if score >= 0.20:
         key = "Happy"
-    elif score >= 0.15:
-        key = "Calm"
-    elif score <= -0.5:
+    elif score <= -0.35:
         key = "Angry"
-    elif score <= -0.15:
-        # Distinguish Sad vs Anxious by energy
+    elif score <= -0.05:
+        # Negative zone: Sad vs Anxious based on energy
         key = "Anxious" if energy > 0.55 else "Sad"
+    elif score >= 0.05:
+        key = "Calm"
     else:
-        # Neutral zone – lean on valence
-        key = "Calm" if valence >= 0.45 else "Anxious"
+        # Near-zero zone (-0.05 to 0.05): use news + energy to break ties
+        if news_sentiment is not None and news_sentiment < -0.15:
+            key = "Anxious" if energy > 0.5 else "Sad"
+        elif news_sentiment is not None and news_sentiment > 0.15:
+            key = "Happy" if valence > 0.5 else "Calm"
+        elif energy > 0.6:
+            key = "Anxious"
+        elif valence < 0.4:
+            key = "Sad"
+        else:
+            key = "Calm"
 
     meta = MOOD_MAP[key]
     return key, meta["color"], meta["emoji"]

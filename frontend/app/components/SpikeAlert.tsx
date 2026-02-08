@@ -23,7 +23,7 @@ export default function SpikeAlert() {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.6, duration: 0.4 }}
-      className="fixed top-6 left-6 z-30 w-72"
+      className="fixed top-20 left-6 z-20 w-72"
     >
       <button
         onClick={() => setExpanded((v) => !v)}

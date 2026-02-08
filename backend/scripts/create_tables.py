@@ -1,12 +1,12 @@
 """
-Database tables oluşturma scripti.
-SQLAlchemy modellerinden tabloları otomatik oluşturur.
+Database table creation script.
+Automatically creates tables from SQLAlchemy models.
 """
 import asyncio
 import sys
 from pathlib import Path
 
-# Backend klasörünü path'e ekle
+# Add backend directory to path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
@@ -16,70 +16,70 @@ from app.config import get_settings
 
 
 async def create_tables():
-    """Tüm tabloları oluştur."""
+    """Create all database tables."""
     settings = get_settings()
-    
-    print("🗄️  MoodAtlas Database Initialization")
+
+    print("🗄️  WorldMood-AI Database Initialization")
     print("=" * 60)
-    print(f"📍 Database URL: {settings.DATABASE_URL.split('@')[-1]}")  # IP'yi göster, şifreyi gizle
+    print(f"📍 Database URL: {settings.DATABASE_URL.split('@')[-1]}")  # Show host, hide password
     print("=" * 60)
-    
+
     try:
         async with engine.begin() as conn:
-            print("\n🔍 Mevcut tabloları kontrol ediliyor...")
-            
-            # Tabloları oluştur (DROP yapmaz, sadece mevcut olmayanları oluşturur)
+            print("\n🔍 Checking existing tables...")
+
+            # Create tables (doesn't DROP, only creates missing ones)
             await conn.run_sync(Base.metadata.create_all)
-            
-            print("✅ Tablolar başarıyla oluşturuldu!")
-            print("\n📋 Oluşturulan tablolar:")
+
+            print("✅ Tables created successfully!")
+            print("\n📋 Created tables:")
             for table in Base.metadata.sorted_tables:
                 print(f"   • {table.name}")
-            
-            # Tablo sayısını kontrol et
+
+            # Check table count
             result = await conn.execute("""
-                SELECT table_name 
-                FROM information_schema.tables 
+                SELECT table_name
+                FROM information_schema.tables
                 WHERE table_schema = 'public'
             """)
             tables = result.fetchall()
-            print(f"\n📊 Toplam tablo sayısı: {len(tables)}")
-            
+            print(f"\n📊 Total table count: {len(tables)}")
+
     except Exception as e:
-        print(f"\n❌ Hata oluştu: {e}")
-        print("\n💡 Çözüm önerileri:")
-        print("   1. PostgreSQL servisinin çalıştığından emin olun")
-        print("   2. .env dosyasındaki DATABASE_URL'i kontrol edin")
-        print("   3. Database ve kullanıcının oluşturulduğundan emin olun:")
+        print(f"\n❌ Error occurred: {e}")
+        print("\n💡 Troubleshooting suggestions:")
+        print("   1. Ensure PostgreSQL service is running")
+        print("   2. Verify DATABASE_URL in .env file")
+        print("   3. Ensure database and user are created:")
         print("      psql -U postgres -f backend/init_db.sql")
         sys.exit(1)
 
 
 async def check_connection():
-    """Database bağlantısını test et."""
-    print("\n🔌 Database bağlantısı test ediliyor...")
+    """Test database connection."""
+    print("\n🔌 Testing database connection...")
     try:
         async with engine.begin() as conn:
             result = await conn.execute("SELECT version()")
             version = result.scalar()
-            print(f"✅ Bağlantı başarılı!")
+            print(f"✅ Connection successful!")
             print(f"📦 PostgreSQL version: {version.split(',')[0]}")
             return True
     except Exception as e:
-        print(f"❌ Bağlantı hatası: {e}")
+        print(f"❌ Connection error: {e}")
         return False
 
 
 async def main():
-    """Ana fonksiyon."""
-    # Önce bağlantıyı test et
+    """Main function."""
+    # Test connection first
     if not await check_connection():
         sys.exit(1)
-    
-    # Tabloları oluştur
+
+    # Create tables
     await create_tables()
-    
-    print("\n✨ Kurulum tamamlandı!")
+
+    print("\n✨ Setup completed!")
     print("=" * 60)
 
 

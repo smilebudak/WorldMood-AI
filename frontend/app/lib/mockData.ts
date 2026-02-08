@@ -4,8 +4,13 @@
 
 import type { CountryMood, GlobalMoodResponse, CountryDetailResponse, SpikeListResponse } from "./api";
 
+type BaseCountry = Omit<CountryMood, "news_headlines" | "news_summary"> & {
+    news_headlines?: string[] | null;
+    news_summary?: string | null;
+};
+
 // Sample country mood data with realistic values
-const SAMPLE_COUNTRIES: CountryMood[] = [
+const SAMPLE_COUNTRIES_BASE: BaseCountry[] = [
     { country_code: "US", country_name: "United States", mood_score: 0.45, mood_label: "Happy", color_code: "#22c55e", valence: 0.72, energy: 0.68, danceability: 0.75, acousticness: 0.15, top_genre: "Pop", top_track: "Good Feeling - Flo Rida", news_sentiment: 0.3, date: new Date().toISOString() },
     { country_code: "GB", country_name: "United Kingdom", mood_score: 0.12, mood_label: "Calm", color_code: "#38bdf8", valence: 0.55, energy: 0.42, danceability: 0.48, acousticness: 0.55, top_genre: "Indie", top_track: "Lost in Yesterday - Tame Impala", news_sentiment: 0.1, date: new Date().toISOString() },
     { country_code: "DE", country_name: "Germany", mood_score: 0.28, mood_label: "Happy", color_code: "#22c55e", valence: 0.65, energy: 0.55, danceability: 0.62, acousticness: 0.25, top_genre: "Electronic", top_track: "Levels - Avicii", news_sentiment: 0.2, date: new Date().toISOString() },
@@ -37,6 +42,25 @@ const SAMPLE_COUNTRIES: CountryMood[] = [
     { country_code: "VN", country_name: "Vietnam", mood_score: 0.28, mood_label: "Calm", color_code: "#38bdf8", valence: 0.58, energy: 0.52, danceability: 0.55, acousticness: 0.38, top_genre: "V-Pop", top_track: "See Tình - Hoàng Thùy Linh", news_sentiment: 0.22, date: new Date().toISOString() },
     { country_code: "UA", country_name: "Ukraine", mood_score: -0.55, mood_label: "Angry", color_code: "#ef4444", valence: 0.25, energy: 0.65, danceability: 0.35, acousticness: 0.42, top_genre: "Ukrainian Pop", top_track: "Stefania - Kalush Orchestra", news_sentiment: -0.6, date: new Date().toISOString() },
 ];
+
+function buildHeadlines(countryName: string): string[] {
+    return [
+        `${countryName} debates economic policy as markets react`,
+        `Major infrastructure project advances across ${countryName}`,
+        `Cultural events boost community energy in ${countryName}`,
+    ];
+}
+
+function buildSummary(countryName: string, moodLabel: string): string {
+    const label = moodLabel.toLowerCase();
+    return `${countryName} feels ${label} as current headlines blend with today's music mood.`;
+}
+
+const SAMPLE_COUNTRIES: CountryMood[] = SAMPLE_COUNTRIES_BASE.map((c) => ({
+    ...c,
+    news_headlines: c.news_headlines ?? buildHeadlines(c.country_name),
+    news_summary: c.news_summary ?? buildSummary(c.country_name, c.mood_label),
+}));
 
 // Generate 7-day trend data
 function generateTrend(baseScore: number): { date: string; mood_score: number; mood_label: string }[] {

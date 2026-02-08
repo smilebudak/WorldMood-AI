@@ -8,13 +8,13 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # --- Application ---
-    APP_NAME: str = "MoodAtlas API"
+    APP_NAME: str = "WorldMood-AI API"
     DEBUG: bool = False
 
     # --- Database ---
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql+asyncpg://moodatlas:moodatlas@localhost:5432/moodatlas",
+        "postgresql+asyncpg://worldmood:worldmood@localhost:5432/worldmood",
     )
 
     # --- Redis ---

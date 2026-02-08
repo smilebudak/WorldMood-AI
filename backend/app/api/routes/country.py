@@ -32,7 +32,7 @@ async def get_country_mood(
             if latest:
                 trend = await svc.get_country_trend(cc)
                 spike = await svc.has_active_spike(cc)
-                
+
                 # Parse news_headlines from JSON string
                 import json
                 headlines = None
@@ -41,7 +41,25 @@ async def get_country_mood(
                         headlines = json.loads(latest.news_headlines)
                     except:
                         pass
-                
+
+                # Always generate a live AI summary for country detail
+                summary = latest.news_summary
+                news = NewsService()
+                if not headlines:
+                    headlines_live = await news.fetch_headlines(cc)
+                    headlines = headlines_live[:5] if headlines_live else None
+                if not summary:
+                    summary = await news.generate_mood_summary(
+                        country_code=cc,
+                        country_name=latest.country_name,
+                        mood_label=latest.mood_label,
+                        valence=latest.valence or 0.5,
+                        energy=latest.energy or 0.5,
+                        top_track=latest.top_track,
+                        top_genre=latest.top_genre,
+                        headlines=headlines,
+                    )
+
                 return CountryDetailResponse(
                     country_code=latest.country_code,
                     country_name=latest.country_name,
@@ -56,7 +74,7 @@ async def get_country_mood(
                     top_track=latest.top_track,
                     news_sentiment=latest.news_sentiment,
                     news_headlines=headlines,
-                    news_summary=latest.news_summary,
+                    news_summary=summary,
                     trend=trend,
                     spike_active=spike,
                 )

@@ -1,108 +1,108 @@
-# 🗄️ PostgreSQL Database Kurulumu - Hızlı Başvuru
+# 🗄️ PostgreSQL Database Setup - Quick Reference
 
-## 📁 Oluşturulan Dosyalar
+## 📁 Created Files
 
 ```
 WorldMood-AI/
-├── setup_database.sh              # 🚀 Otomatik kurulum scripti
-├── DATABASE_SETUP.md              # 📚 Detaylı kurulum dokümantasyonu  
-├── BACKEND_DATABASE_GUIDE.md      # 🔧 Backend developer rehberi
-├── .env.example                   # ⚙️  Environment template (güncellenmiş)
+├── setup_database.sh              # 🚀 Automated setup script
+├── DATABASE_SETUP.md              # 📚 Detailed setup documentation
+├── BACKEND_DATABASE_GUIDE.md      # 🔧 Backend developer guide
+├── .env.example                   # ⚙️  Environment template (updated)
 └── backend/
     ├── init_db.sql               # 💾 PostgreSQL initialization script
     └── scripts/
-        ├── create_tables.py      # 📊 Tabloları otomatik oluştur
-        └── check_db.py           # 🔍 Database durumunu kontrol et
+        ├── create_tables.py      # 📊 Auto-create tables
+        └── check_db.py           # 🔍 Check database status
 ```
 
 ---
 
-## ⚡ Hızlı Kurulum
+## ⚡ Quick Setup
 
-### Yöntem 1: Otomatik Script (En Hızlı)
+### Method 1: Automated Script (Fastest)
 
 ```bash
 ./setup_database.sh
 ```
 
-Bu script otomatik olarak:
-- ✅ PostgreSQL'i kontrol eder ve başlatır
-- ✅ Database ve kullanıcıyı oluşturur
-- ✅ Tabloları ve indeksleri oluşturur
-- ✅ `.env` dosyasını hazırlar
-- ✅ Kurulumu doğrular
+This script automatically:
+- ✅ Checks and starts PostgreSQL
+- ✅ Creates database and user
+- ✅ Creates tables and indexes
+- ✅ Prepares `.env` file
+- ✅ Validates installation
 
 ---
 
-### Yöntem 2: Docker Compose (Önerilen)
+### Method 2: Docker Compose (Recommended)
 
 ```bash
-# 1. .env dosyası oluştur
+# 1. Create .env file
 cp .env.example .env
 
-# 2. Tüm servisleri başlat
+# 2. Start all services
 docker-compose up -d
 
-# 3. Tabloları oluştur
+# 3. Create tables
 docker-compose exec backend python scripts/create_tables.py
 
-# 4. Durumu kontrol et
+# 4. Check status
 docker-compose exec backend python scripts/check_db.py
 ```
 
 ---
 
-### Yöntem 3: Manuel Kurulum
+### Method 3: Manual Setup
 
 ```bash
-# 1. Database'i oluştur
+# 1. Create database
 psql -U postgres -f backend/init_db.sql
 
-# 2. .env yapılandır
+# 2. Configure .env
 cp .env.example .env
-nano .env  # DATABASE_URL'i güncelle
+nano .env  # Update DATABASE_URL
 
-# 3. Tabloları oluştur
+# 3. Create tables
 cd backend
 python scripts/create_tables.py
 
-# 4. Durumu kontrol et
+# 4. Check status
 python scripts/check_db.py
 ```
 
 ---
 
-## 🔧 Database URL Formatı
+## 🔧 Database URL Format
 
-### Docker ile:
+### With Docker:
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@postgres:5432/moodatlas
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@postgres:5432/worldmood
 ```
 
-### Yerel PostgreSQL:
+### Local PostgreSQL:
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@localhost:5432/moodatlas
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@localhost:5432/worldmood
 ```
 
-### Uzak Sunucu:
+### Remote Server:
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@<SUNUCU_IP>:5432/moodatlas
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@<SERVER_IP>:5432/worldmood
 ```
 
-**Not:** `<SUNUCU_IP>` yerine gerçek IP adresini yazın (örn: `192.168.1.100`)
+**Note:** Replace `<SERVER_IP>` with the actual IP address (e.g., `192.168.1.100`)
 
 ---
 
-## 📊 Database Şeması
+## 📊 Database Schema
 
-### country_mood Tablosu
+### country_mood Table
 ```sql
 - id (SERIAL PRIMARY KEY)
-- country_code (VARCHAR(3))      -- "US", "TR", vb.
+- country_code (VARCHAR(3))      -- "US", "GB", etc.
 - country_name (VARCHAR(120))
 - date (TIMESTAMP)
 - mood_score (FLOAT)             -- -1.0 to 1.0
-- mood_label (VARCHAR(20))       -- "Happy", "Sad", vb.
+- mood_label (VARCHAR(20))       -- "Happy", "Sad", etc.
 - color_code (VARCHAR(7))        -- Hex color
 - valence, energy, danceability, acousticness (FLOAT)
 - top_genre, top_track (VARCHAR)
@@ -111,7 +111,7 @@ DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@<SUNUCU_IP>:5432/moodatlas
 - UNIQUE(country_code, date)
 ```
 
-### mood_spike Tablosu
+### mood_spike Table
 ```sql
 - id (SERIAL PRIMARY KEY)
 - country_code (VARCHAR(3))
@@ -124,95 +124,95 @@ DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@<SUNUCU_IP>:5432/moodatlas
 
 ---
 
-## 🛠️ Faydalı Komutlar
+## 🛠️ Useful Commands
 
 ### Python Scripts
 ```bash
-# Tabloları oluştur
+# Create tables
 python backend/scripts/create_tables.py
 
-# Database durumu
+# Database status
 python backend/scripts/check_db.py
 
-# Günlük veri toplama
+# Daily data collection
 python backend/scripts/daily_ingest.py
 ```
 
-### SQL Komutları
+### SQL Commands
 ```bash
-# Database'e bağlan
-psql -U moodatlas -d moodatlas
+# Connect to database
+psql -U worldmood -d worldmood
 
-# Tabloları listele
+# List tables
 \dt
 
-# Veri kontrolü
+# Check data
 SELECT COUNT(*) FROM country_mood;
 SELECT COUNT(*) FROM mood_spike;
 
-# Son kayıtlar
+# Recent records
 SELECT * FROM country_mood ORDER BY created_at DESC LIMIT 5;
 ```
 
-### Docker Komutları
+### Docker Commands
 ```bash
-# Servisleri başlat
+# Start services
 docker-compose up -d
 
 # Backend logs
 docker-compose logs -f backend
 
-# PostgreSQL'e bağlan
-docker-compose exec postgres psql -U moodatlas -d moodatlas
+# Connect to PostgreSQL
+docker-compose exec postgres psql -U worldmood -d worldmood
 
-# Backend içinde komut çalıştır
+# Run commands in backend
 docker-compose exec backend python scripts/check_db.py
 ```
 
 ---
 
-## 🔍 Sorun Giderme
+## 🔍 Troubleshooting
 
-| Hata | Çözüm |
-|------|-------|
-| `could not connect to server` | `pg_isready` ile servisi kontrol et, gerekirse başlat |
-| `database does not exist` | `psql -U postgres -f backend/init_db.sql` çalıştır |
-| `password authentication failed` | `.env` dosyasındaki şifreyi kontrol et |
-| `relation does not exist` | `python scripts/create_tables.py` çalıştır |
-| Port 5432 kullanımda | `lsof -i :5432` ile kontrol et |
+| Error | Solution |
+|-------|----------|
+| `could not connect to server` | Check service with `pg_isready`, start if needed |
+| `database does not exist` | Run `psql -U postgres -f backend/init_db.sql` |
+| `password authentication failed` | Check password in `.env` file |
+| `relation does not exist` | Run `python scripts/create_tables.py` |
+| Port 5432 in use | Check with `lsof -i :5432` |
 
 ---
 
-## 📚 Dokümantasyon
+## 📚 Documentation
 
-- **[BACKEND_DATABASE_GUIDE.md](BACKEND_DATABASE_GUIDE.md)** - Backend developer için detaylı rehber
-- **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - Kapsamlı kurulum ve yönetim dokümantasyonu
+- **[BACKEND_DATABASE_GUIDE.md](BACKEND_DATABASE_GUIDE.md)** - Detailed guide for backend developers
+- **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - Comprehensive setup and management documentation
 - **[backend/init_db.sql](backend/init_db.sql)** - SQL initialization script
 
 ---
 
-## 🔐 Güvenlik Notları
+## 🔐 Security Notes
 
-**Production için MUTLAKA:**
+**IMPORTANT for Production:**
 
-1. **Şifreleri değiştir:**
+1. **Change passwords:**
 ```sql
-ALTER USER moodatlas WITH PASSWORD 'güçlü_şifre_123!';
+ALTER USER worldmood WITH PASSWORD 'strong_password_123!';
 ```
 
-2. **`.env` dosyasını git'e ekleme:**
+2. **Don't commit `.env` to git:**
 ```bash
-# .gitignore'da olduğundan emin ol
+# Ensure it's in .gitignore
 echo ".env" >> .gitignore
 ```
 
-3. **Firewall yapılandır:**
+3. **Configure firewall:**
 ```bash
-# Sadece belirli IP'lerden erişime izin ver
+# Allow access only from specific IPs
 sudo ufw allow from 10.0.0.0/24 to any port 5432
 ```
 
-4. **SSL kullan:**
+4. **Use SSL:**
 ```env
 DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db?ssl=require
 ```
@@ -221,28 +221,28 @@ DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db?ssl=require
 
 ## ✅ Backend Developer Checklist
 
-Backend geliştirici için yapılacaklar:
+For backend developers:
 
-- [ ] PostgreSQL kurulu ve çalışıyor
-- [ ] `init_db.sql` çalıştırıldı
-- [ ] `.env` dosyası oluşturuldu
-- [ ] `DATABASE_URL` doğru sunucu IP'si ile güncellendi
-- [ ] `python scripts/create_tables.py` çalıştırıldı
-- [ ] `python scripts/check_db.py` ile doğrulandı
-- [ ] API anahtarları `.env`'e eklendi (SPOTIFY, NEWS_API, vb.)
-- [ ] Backend başlatıldı ve test edildi
-- [ ] Health check endpoint çalışıyor (`/health`)
+- [ ] PostgreSQL installed and running
+- [ ] `init_db.sql` executed
+- [ ] `.env` file created
+- [ ] `DATABASE_URL` updated with correct server IP
+- [ ] `python scripts/create_tables.py` executed
+- [ ] Verified with `python scripts/check_db.py`
+- [ ] API keys added to `.env` (LASTFM, GEMINI, etc.)
+- [ ] Backend started and tested
+- [ ] Health check endpoint working (`/health`)
 
 ---
 
-## 🚀 Başlatma
+## 🚀 Starting the Application
 
 ```bash
-# Backend'i başlat
+# Start backend
 cd backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Veya Docker ile tüm stack'i başlat
+# Or start entire stack with Docker
 docker-compose up
 ```
 
@@ -254,18 +254,18 @@ curl http://localhost:8000/api/country/US/mood
 
 ---
 
-## 📞 Yardım
+## 📞 Help
 
-Sorun yaşarsanız:
+If you encounter issues:
 
-1. Logları kontrol edin
-2. `python scripts/check_db.py` çalıştırın
-3. `.env` dosyasında `DEBUG=True` yapın
-4. [DATABASE_SETUP.md](DATABASE_SETUP.md) sorun giderme bölümüne bakın
+1. Check logs
+2. Run `python scripts/check_db.py`
+3. Set `DEBUG=True` in `.env`
+4. Refer to [DATABASE_SETUP.md](DATABASE_SETUP.md) troubleshooting section
 
 ---
 
-**Created: 2026-02-07**  
-**Version: 1.0**  
-**PostgreSQL: 16+**  
+**Created: 2026-02-07**
+**Version: 1.0**
+**PostgreSQL: 16+**
 **SQLAlchemy: 2.0+**

@@ -1,46 +1,46 @@
 # 🔧 Backend Developer Guide - Database Connection
 
-## 📝 Özet
+## 📝 Summary
 
-PostgreSQL database'i hazırlandı. Backend developer'ın yapması gerekenler:
+PostgreSQL database is ready. Backend developer needs to:
 
-### ✅ Yapılması Gerekenler:
+### ✅ Tasks to Complete:
 
-1. **PostgreSQL'i çalıştır ve init script'i uygula**
-2. **`.env` dosyasını oluştur ve DATABASE_URL'i güncelle**
-3. **Tabloları oluştur** (otomatik script ile)
-4. **Backend'i başlat ve test et**
+1. **Run PostgreSQL and apply the init script**
+2. **Create the `.env` file and update the DATABASE_URL**
+3. **Create tables** (with automatic script)
+4. **Start and test the backend**
 
 ---
 
-## 🚀 Hızlı Başlangıç
+## 🚀 Quick Start
 
-### Seçenek 1: Docker ile (Önerilen - En Kolay)
+### Option 1: With Docker (Recommended - Easiest)
 
 ```bash
-# 1. .env dosyası oluştur
+# 1. Create .env file
 cp .env.example .env
 
-# 2. Tüm servisleri başlat (PostgreSQL + Redis + Backend + Frontend)
+# 2. Start all services (PostgreSQL + Redis + Backend + Frontend)
 docker-compose up -d
 
-# 3. Backend loglarını izle
+# 3. Monitor backend logs
 docker-compose logs -f backend
 
-# 4. Tabloları oluştur (ilk çalıştırmada)
+# 4. Create tables (on first run)
 docker-compose exec backend python scripts/create_tables.py
 
-# 5. Database durumunu kontrol et
+# 5. Check database status
 docker-compose exec backend python scripts/check_db.py
 ```
 
-✅ **Docker ile hiçbir şey değiştirmeye gerek yok!** DATABASE_URL zaten doğru yapılandırılmış.
+✅ **No changes needed with Docker!** DATABASE_URL is already properly configured.
 
 ---
 
-### Seçenek 2: Manuel PostgreSQL Sunucusu ile
+### Option 2: With Manual PostgreSQL Server
 
-#### 1️⃣ PostgreSQL'i Kur ve Başlat
+#### 1️⃣ Install and Start PostgreSQL
 
 ```bash
 # macOS
@@ -52,99 +52,99 @@ sudo apt update
 sudo apt install postgresql-16
 sudo systemctl start postgresql
 
-# Uzak sunucu
-ssh user@sunucu_ip
+# Remote server
+ssh user@server_ip
 sudo systemctl start postgresql
 ```
 
-#### 2️⃣ Database'i Oluştur
+#### 2️⃣ Create the Database
 
 ```bash
-# init_db.sql script'ini çalıştır
+# Run the init_db.sql script
 psql -U postgres -f backend/init_db.sql
 
-# Veya PostgreSQL içinden:
+# Or from within PostgreSQL:
 psql -U postgres
 \i backend/init_db.sql
 ```
 
-Script şunları yapar:
-- ✅ `moodatlas` kullanıcısı oluşturur (şifre: `moodatlas`)
-- ✅ `moodatlas` database'i oluşturur
-- ✅ `country_mood` ve `mood_spike` tablolarını oluşturur
-- ✅ İndeksleri ve izinleri ayarlar
+The script does:
+- ✅ Creates the `worldmood` user (password: `worldmood`)
+- ✅ Creates the `worldmood` database
+- ✅ Creates the `country_mood` and `mood_spike` tables
+- ✅ Sets up indexes and permissions
 
-#### 3️⃣ .env Dosyasını Yapılandır
+#### 3️⃣ Configure the .env File
 
 ```bash
-# .env.example'ı kopyala
+# Copy .env.example
 cp .env.example .env
 
-# .env dosyasını düzenle
-nano .env  # veya vim, vscode, vb.
+# Edit the .env file
+nano .env  # or vim, vscode, etc.
 ```
 
-**`.env` içindeki DATABASE_URL'i güncelle:**
+**Update DATABASE_URL in `.env`:**
 
 ```env
-# Yerel PostgreSQL
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@localhost:5432/moodatlas
+# Local PostgreSQL
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@localhost:5432/worldmood
 
-# Uzak sunucu (örnek)
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@192.168.1.100:5432/moodatlas
+# Remote server (example)
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@192.168.1.100:5432/worldmood
 
-# Domain ile
-DATABASE_URL=postgresql+asyncpg://moodatlas:moodatlas@db.example.com:5432/moodatlas
+# With domain
+DATABASE_URL=postgresql+asyncpg://worldmood:worldmood@db.example.com:5432/worldmood
 ```
 
 **Format:**
 ```
-postgresql+asyncpg://[kullanıcı]:[şifre]@[host]:[port]/[database_adı]
+postgresql+asyncpg://[username]:[password]@[host]:[port]/[database_name]
 ```
 
-#### 4️⃣ Tabloları Oluştur (İlk Sefer)
+#### 4️⃣ Create Tables (First Time)
 
 ```bash
 cd backend
 
-# Python environment'ı aktifleştir (varsa)
+# Activate Python environment (if available)
 # source venv/bin/activate
 
-# Tabloları oluştur
+# Create tables
 python scripts/create_tables.py
 ```
 
-Çıktı şöyle olmalı:
+Output should look like:
 ```
-🗄️  MoodAtlas Database Initialization
+🗄️  WorldMood-AI Database Initialization
 ============================================================
-📍 Database URL: localhost:5432/moodatlas
+📍 Database URL: localhost:5432/worldmood
 ============================================================
 
-🔌 Database bağlantısı test ediliyor...
-✅ Bağlantı başarılı!
+🔌 Testing database connection...
+✅ Connection successful!
 📦 PostgreSQL version: PostgreSQL 16.x
 
-🔍 Mevcut tabloları kontrol ediliyor...
-✅ Tablolar başarıyla oluşturuldu!
+🔍 Checking existing tables...
+✅ Tables created successfully!
 
-📋 Oluşturulan tablolar:
+📋 Created tables:
    • country_mood
    • mood_spike
 
-📊 Toplam tablo sayısı: 2
+📊 Total table count: 2
 
-✨ Kurulum tamamlandı!
+✨ Setup complete!
 ```
 
-#### 5️⃣ Database Durumunu Kontrol Et
+#### 5️⃣ Check Database Status
 
 ```bash
-# Database durumunu kontrol et
+# Check database status
 python scripts/check_db.py
 ```
 
-#### 6️⃣ Backend'i Başlat
+#### 6️⃣ Start the Backend
 
 ```bash
 # Development mode
@@ -156,19 +156,19 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ---
 
-## 🔍 Sorun Giderme
+## 🔍 Troubleshooting
 
 ### ❌ "could not connect to server"
 
 ```bash
-# PostgreSQL çalışıyor mu?
+# Is PostgreSQL running?
 # macOS:
 brew services list | grep postgresql
 
 # Linux:
 sudo systemctl status postgresql
 
-# Başlat:
+# Start it:
 # macOS:
 brew services start postgresql@16
 
@@ -176,157 +176,157 @@ brew services start postgresql@16
 sudo systemctl start postgresql
 ```
 
-### ❌ "database 'moodatlas' does not exist"
+### ❌ "database 'worldmood' does not exist"
 
 ```bash
-# init_db.sql'i tekrar çalıştır
+# Run init_db.sql again
 psql -U postgres -f backend/init_db.sql
 ```
 
 ### ❌ "password authentication failed"
 
-`.env` dosyasındaki şifreyi kontrol et. Varsayılan: `moodatlas`
+Check the password in the `.env` file. Default: `worldmood`
 
 ```bash
-# Şifreyi PostgreSQL'de değiştir
+# Change password in PostgreSQL
 psql -U postgres
-ALTER USER moodatlas WITH PASSWORD 'yeni_şifre';
+ALTER USER worldmood WITH PASSWORD 'new_password';
 ```
 
 ### ❌ "relation 'country_mood' does not exist"
 
 ```bash
-# Tabloları oluştur
+# Create tables
 python scripts/create_tables.py
 ```
 
-### 🔒 Firewall/Port Problemi
+### 🔒 Firewall/Port Issues
 
 ```bash
-# PostgreSQL portuna erişim var mı?
+# Can you access PostgreSQL port?
 telnet localhost 5432
-# veya
+# or
 nc -zv localhost 5432
 
-# Firewall'da 5432 portunu aç (uzak sunucu için)
+# Open port 5432 in firewall (for remote server)
 sudo ufw allow 5432/tcp
 
-# PostgreSQL'in dışarıdan bağlantı kabul ettiğinden emin ol
+# Make sure PostgreSQL accepts external connections
 # postgresql.conf:
 # listen_addresses = '*'
 
-# pg_hba.conf: (GÜVENLİK UYARISI - production'da IP kısıtla!)
+# pg_hba.conf: (SECURITY WARNING - restrict IP in production!)
 # host    all    all    0.0.0.0/0    md5
 ```
 
 ---
 
-## 📊 Faydalı Komutlar
+## 📊 Useful Commands
 
 ### Python Scripts
 
 ```bash
-# Database durumu
+# Database status
 python scripts/check_db.py
 
-# Tabloları oluştur
+# Create tables
 python scripts/create_tables.py
 
-# Günlük veri toplama (cron job için)
+# Daily data collection (for cron job)
 python scripts/daily_ingest.py
 ```
 
-### SQL Komutları
+### SQL Commands
 
 ```bash
-# PostgreSQL'e bağlan
-psql -U moodatlas -d moodatlas
+# Connect to PostgreSQL
+psql -U worldmood -d worldmood
 
-# Tabloları listele
+# List tables
 \dt
 
-# Tablo yapısı
+# Table structure
 \d country_mood
 \d mood_spike
 
-# Son kayıtlar
+# Latest records
 SELECT * FROM country_mood ORDER BY created_at DESC LIMIT 5;
 SELECT * FROM mood_spike ORDER BY detected_at DESC LIMIT 5;
 
-# İstatistikler
-SELECT 
-    country_code, 
+# Statistics
+SELECT
+    country_code,
     COUNT(*) as total_records,
     MAX(created_at) as latest_record
-FROM country_mood 
-GROUP BY country_code 
+FROM country_mood
+GROUP BY country_code
 ORDER BY total_records DESC;
 
-# Database boyutu
-SELECT pg_size_pretty(pg_database_size('moodatlas'));
+# Database size
+SELECT pg_size_pretty(pg_database_size('worldmood'));
 ```
 
 ---
 
-## 🔐 Güvenlik Notları
+## 🔐 Security Notes
 
-### Production İçin MUTLAKA Değiştir:
+### MUST Change for Production:
 
-1. **Şifreleri güçlendir:**
+1. **Strengthen passwords:**
 ```sql
-ALTER USER moodatlas WITH PASSWORD 'çok_güçlü_şifre_123!@#$';
+ALTER USER worldmood WITH PASSWORD 'very_strong_password_123!@#$';
 ```
 
-2. **`.env` dosyasını güncelle:**
+2. **Update the `.env` file:**
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:çok_güçlü_şifre_123!@#$@host:5432/moodatlas
+DATABASE_URL=postgresql+asyncpg://worldmood:very_strong_password_123!@#$@host:5432/worldmood
 ```
 
-3. **Firewall konfigürasyonu:**
+3. **Firewall configuration:**
 ```bash
-# Sadece belirli IP'lerden erişime izin ver
+# Allow access only from specific IPs
 # pg_hba.conf:
-host    moodatlas    moodatlas    10.0.1.0/24    md5  # Sadece bu subnet
+host    worldmood    worldmood    10.0.1.0/24    md5  # Only this subnet
 ```
 
-4. **SSL kullan:**
+4. **Use SSL:**
 ```env
-DATABASE_URL=postgresql+asyncpg://moodatlas:password@host:5432/moodatlas?ssl=require
+DATABASE_URL=postgresql+asyncpg://worldmood:password@host:5432/worldmood?ssl=require
 ```
 
 ---
 
-## 📞 İletişim
+## 📞 Contact
 
-Database kurulumunda sorun yaşarsanız:
+If you experience issues with database setup:
 
-1. **Logları kontrol et:**
+1. **Check logs:**
    - Backend logs: `docker-compose logs backend`
    - PostgreSQL logs: `/var/log/postgresql/`
 
-2. **Debug mode aç:**
+2. **Enable debug mode:**
    ```env
-   # .env dosyasında
+   # In .env file
    DEBUG=True
    ```
 
-3. **Bağlantıyı test et:**
+3. **Test connection:**
    ```bash
    python scripts/check_db.py
    ```
 
 ---
 
-## 📚 Ek Kaynaklar
+## 📚 Additional Resources
 
-- [DATABASE_SETUP.md](DATABASE_SETUP.md) - Detaylı kurulum rehberi
+- [DATABASE_SETUP.md](DATABASE_SETUP.md) - Detailed setup guide
 - [backend/init_db.sql](backend/init_db.sql) - SQL initialization script
-- [backend/app/db/models.py](backend/app/db/models.py) - SQLAlchemy modelleri
+- [backend/app/db/models.py](backend/app/db/models.py) - SQLAlchemy models
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 
 ---
 
-**✨ Başarılı kurulum sonrası API endpoints test edilebilir:**
+**✨ After successful setup, API endpoints can be tested:**
 
 ```bash
 # Health check

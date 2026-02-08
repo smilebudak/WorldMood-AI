@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 import json
 import logging
@@ -22,6 +23,51 @@ router = APIRouter(prefix="/mood", tags=["mood"])
 settings = get_settings()
 
 CACHE_KEY = "mood:global:latest"
+
+
+async def _process_country(
+    cc: str, feat: dict, news: NewsService
+) -> CountryMoodResponse:
+    """Process a single country: news sentiment + mood computation."""
+    sentiment = await news.fetch_sentiment(cc)
+    headlines = await news.fetch_headlines(cc)
+    mood = compute_mood(
+        valence=feat["valence"],
+        energy=feat["energy"],
+        danceability=feat.get("danceability", 0.5),
+        acousticness=feat.get("acousticness", 0.5),
+        news_sentiment=sentiment,
+    )
+
+    country_name = SUPPORTED_COUNTRIES.get(cc, cc)
+    summary = await news.generate_mood_summary(
+        country_code=cc,
+        country_name=country_name,
+        mood_label=mood.mood_label,
+        valence=feat["valence"],
+        energy=feat["energy"],
+        top_track=feat.get("top_track"),
+        top_genre=feat.get("top_genre"),
+        headlines=headlines[:5] if headlines else None,
+    )
+
+    return CountryMoodResponse(
+        country_code=cc,
+        country_name=country_name,
+        date=dt.datetime.utcnow(),
+        mood_score=mood.mood_score,
+        mood_label=mood.mood_label,
+        color_code=mood.color_code,
+        valence=feat["valence"],
+        energy=feat["energy"],
+        danceability=feat.get("danceability"),
+        acousticness=feat.get("acousticness"),
+        top_genre=feat.get("top_genre"),
+        top_track=feat.get("top_track"),
+        news_sentiment=sentiment,
+        news_headlines=headlines[:5] if headlines else None,
+        news_summary=summary,
+    )
 
 
 @router.get("/global", response_model=GlobalMoodResponse)
@@ -52,56 +98,26 @@ async def get_global_mood(
         except Exception:
             pass
 
-    # 3. Compute on-the-fly from Last.fm
+    # 3. Compute on-the-fly from Last.fm (parallel)
     lastfm = LastFmService()
     news = NewsService()
 
     market_features = await lastfm.fetch_all_markets()
+
+    # Process all countries in parallel batches of 10
+    items = list(market_features.items())
     countries: list[CountryMoodResponse] = []
 
-    for cc, feat in market_features.items():
-        sentiment = await news.fetch_sentiment(cc)
-        headlines = await news.fetch_headlines(cc)
-        mood = compute_mood(
-            valence=feat["valence"],
-            energy=feat["energy"],
-            danceability=feat.get("danceability", 0.5),
-            acousticness=feat.get("acousticness", 0.5),
-            news_sentiment=sentiment,
-        )
-        
-        # Generate AI mood summary
-        country_name = SUPPORTED_COUNTRIES.get(cc, cc)
-        summary = await news.generate_mood_summary(
-            country_code=cc,
-            country_name=country_name,
-            mood_label=mood.mood_label,
-            valence=feat["valence"],
-            energy=feat["energy"],
-            top_track=feat.get("top_track"),
-            top_genre=feat.get("top_genre"),
-            headlines=headlines[:5] if headlines else None,
-        )
-        
-        countries.append(
-            CountryMoodResponse(
-                country_code=cc,
-                country_name=country_name,
-                date=dt.datetime.utcnow(),
-                mood_score=mood.mood_score,
-                mood_label=mood.mood_label,
-                color_code=mood.color_code,
-                valence=feat["valence"],
-                energy=feat["energy"],
-                danceability=feat.get("danceability"),
-                acousticness=feat.get("acousticness"),
-                top_genre=feat.get("top_genre"),
-                top_track=feat.get("top_track"),
-                news_sentiment=sentiment,
-                news_headlines=headlines[:5] if headlines else None,
-                news_summary=summary,
-            )
-        )
+    BATCH_SIZE = 10
+    for i in range(0, len(items), BATCH_SIZE):
+        batch = items[i : i + BATCH_SIZE]
+        tasks = [_process_country(cc, feat, news) for cc, feat in batch]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for r in results:
+            if isinstance(r, CountryMoodResponse):
+                countries.append(r)
+            else:
+                logger.error("Country processing failed: %s", r)
 
     resp = GlobalMoodResponse(updated_at=dt.datetime.utcnow(), countries=countries)
 
@@ -110,9 +126,8 @@ async def get_global_mood(
         try:
             svc = TrendsService(db)
             for country in countries:
-                # Convert headlines list to JSON string for DB storage
                 headlines_json = json.dumps(country.news_headlines) if country.news_headlines else None
-                
+
                 await svc.upsert_mood({
                     "country_code": country.country_code,
                     "country_name": country.country_name,
@@ -141,6 +156,3 @@ async def get_global_mood(
             pass
 
     return resp
-
-
-# _country_names removed - using SUPPORTED_COUNTRIES from lastfm_service instead

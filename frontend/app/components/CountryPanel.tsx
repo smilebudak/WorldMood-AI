@@ -168,16 +168,40 @@ export default function CountryPanel({ countryCode, onClose }: CountryPanelProps
                 </div>
               )}
 
-              {/* AI Mood Summary */}
-              {data.news_summary && (
+              {/* Gemini Mood Summary */}
+              {(data.news_summary || (data.news_headlines && data.news_headlines.length > 0)) && (
                 <div className="rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm">✨</span>
-                    <span className="text-xs font-medium text-purple-400">AI Mood Insight</span>
+                    <span className="text-sm">?</span>
+                    <span className="text-xs font-medium text-purple-400">Gemini Insight</span>
                   </div>
-                  <p className="text-sm text-gray-300 italic leading-relaxed">
-                    "{data.news_summary}"
-                  </p>
+                  {data.news_summary ? (
+                    <p className="text-sm text-gray-300 italic leading-relaxed">
+                      "{data.news_summary}"
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-400 italic leading-relaxed">
+                      Gemini summary not available yet.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* News Headlines */}
+              {data.news_headlines && data.news_headlines.length > 0 && (
+                <div className="rounded-lg bg-background/60 border border-border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-medium text-gray-300">
+                      Top Headlines
+                    </span>
+                  </div>
+                  <ul className="space-y-2 text-sm text-gray-400">
+                    {data.news_headlines.slice(0, 5).map((h, i) => (
+                      <li key={`${i}-${h}`} className="leading-relaxed">
+                        - {h}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 

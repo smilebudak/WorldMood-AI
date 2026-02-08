@@ -28,7 +28,9 @@ export default function Home() {
         setCountries(res.countries);
         setUpdatedAt(res.updated_at);
       })
-      .catch(console.error)
+      .catch((error) => {
+        // Failed to fetch mood data, using fallback/empty state
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -58,7 +60,7 @@ export default function Home() {
         className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between
                    px-3 py-2 sm:px-6 sm:py-4 pointer-events-none"
       >
-        <div className="pointer-events-auto flex items-center gap-2 sm:gap-3">
+        <div className="pointer-events-auto flex items-start gap-2 sm:gap-3">
           {/* Animated Globe Icon */}
           <motion.div
             animate={{ rotate: 360 }}
@@ -72,7 +74,7 @@ export default function Home() {
           </motion.div>
 
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-mood-calm to-mood-happy 
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-mood-calm to-mood-happy
                            bg-clip-text text-transparent drop-shadow-lg">
               WorldMood-AI
             </h1>
@@ -80,14 +82,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Live Status Badge */}
-        <div className="pointer-events-auto flex items-center gap-4">
-          {/* Live indicator */}
+        {/* Right side - Live badge and timestamp */}
+        <div className="pointer-events-auto flex items-center gap-3">
+          {/* Live indicator - moved to top right */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full
                        bg-surface/80 backdrop-blur-md border border-border shadow-lg"
           >
             <span className="relative flex h-2 w-2">
@@ -103,7 +105,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-xs text-gray-500 bg-surface/60 backdrop-blur-sm 
+              className="text-xs text-gray-500 bg-surface/60 backdrop-blur-sm
                          px-3 py-1.5 rounded-full border border-border/50"
             >
               Updated {new Date(updatedAt).toLocaleTimeString()}
