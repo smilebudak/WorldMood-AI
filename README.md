@@ -1,4 +1,4 @@
-# 🌍 WorldMood-AI
+# WorldMood-AI
 
 **Real-time global mood visualization powered by music trends, AI sentiment analysis, and interactive 3D globe.**
 
@@ -11,19 +11,19 @@ Experience the world's emotional pulse through data-driven insights, combining m
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎨 Interactive 3D Visualization
+### Interactive 3D Visualization
 - **3D Globe with Starfield** - Mapbox GL powered rotating globe with atmospheric effects
 - **Real-time Mood Colors** - Countries dynamically colored based on current mood (Happy 🟢, Calm 🔵, Sad 🟣, Angry 🔴, Anxious 🟠)
 - **Smooth Interactions** - Click and drag to explore, zoom to regions, hover for instant insights
 
-### 🤖 AI-Powered Insights
+### AI-Powered Insights
 - **Gemini AI Summaries** - Context-aware mood explanations for each country
 - **Smart Analysis** - Combines news headlines with music trends for accurate sentiment
 - **Automated Updates** - Daily data refresh with intelligent caching
 
-### 📊 Rich Data Visualizations
+### Rich Data Visualizations
 - **Country Detail Panel** - Deep-dive into any country's mood with:
   - 7-day mood trend charts
   - Audio feature breakdowns (valence, energy, danceability, acousticness)
@@ -36,14 +36,14 @@ Experience the world's emotional pulse through data-driven insights, combining m
   - Average emotional metrics
 - **Spike Alerts** - Real-time notifications for significant mood shifts
 
-### 🎵 Multi-Source Data Integration
+### Multi-Source Data Integration
 - **Last.fm API** - Top music tracks and audio features from 60+ countries
 - **Google News RSS** - Country-specific news headlines
 - **Gemini AI** - Advanced natural language processing for sentiment analysis
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
@@ -73,9 +73,9 @@ docker-compose exec backend python scripts/create_tables.py
 docker-compose exec backend python scripts/daily_ingest.py
 
 # 7. Open the application
-# 🌐 Frontend: http://localhost:3001
-# 🔌 Backend API: http://localhost:8001
-# 📚 API Docs: http://localhost:8001/docs
+# Frontend: http://localhost:3001
+# Backend API: http://localhost:8001
+# API Docs: http://localhost:8001/docs
 ```
 
 ### Quick Commands
@@ -100,7 +100,7 @@ docker-compose exec backend python scripts/daily_ingest.py
 
 ---
 
-## 🔑 Getting API Keys
+## Getting API Keys
 
 ### Required APIs
 
@@ -147,7 +147,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8001
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Tech Stack
 
@@ -240,7 +240,7 @@ WorldMood-AI/
 
 ---
 
-## 📊 How It Works
+## How It Works
 
 ### Mood Calculation Algorithm
 
@@ -274,7 +274,7 @@ Identifies significant mood shifts using:
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### `country_mood` Table
 Stores daily mood snapshots for each country.
@@ -318,7 +318,7 @@ Tracks significant mood changes.
 
 ---
 
-## 🔌 API Documentation
+## API Documentation
 
 ### REST Endpoints
 
@@ -391,7 +391,7 @@ Returns recent significant mood changes (last 20).
 
 ---
 
-## 🎨 UI Components
+## UI Components
 
 ### WorldMap Component
 3D interactive globe with:
@@ -427,7 +427,7 @@ Real-time alert widget:
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Docker Services
 
@@ -465,7 +465,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8001
 
 ---
 
-## 🔄 Data Pipeline
+## Data Pipeline
 
 ### Daily Ingestion (`daily_ingest.py`)
 
@@ -502,7 +502,7 @@ Automated workflow:
 
 ---
 
-## 🧪 Development
+## Development
 
 ### Running Locally (Without Docker)
 
@@ -556,7 +556,7 @@ docker-compose exec redis redis-cli
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Frontend shows no colors
 
@@ -628,7 +628,7 @@ lsof -i :6380  # Redis
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Next.js Documentation](https://nextjs.org/docs)
@@ -639,7 +639,7 @@ lsof -i :6380  # Redis
 
 ---
 
-## 🔒 Security Best Practices
+## Security Best Practices
 
 ### Production Checklist
 
@@ -664,7 +664,7 @@ lsof -i :6380  # Redis
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Here's how:
 
@@ -692,13 +692,13 @@ We welcome contributions! Here's how:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Last.fm](https://www.last.fm/) for music data API
 - [Google](https://ai.google.dev/) for Gemini AI
@@ -708,7 +708,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📞 Support
+## Support
 
 Need help? Try these resources:
 
@@ -724,7 +724,7 @@ Need help? Try these resources:
 
 ---
 
-## 🎯 Roadmap
+## Roadmap
 
 - [ ] User authentication and personalized dashboards
 - [ ] Historical mood playback (time machine)
@@ -736,9 +736,3 @@ Need help? Try these resources:
 - [ ] Real-time WebSocket updates
 - [ ] Country comparison views
 - [ ] Embeddable widgets
-
----
-
-**Built with ❤️ using FastAPI, Next.js, PostgreSQL, and AI**
-
-*Making the world's emotions visible, one country at a time.* 🌍✨
